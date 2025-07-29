@@ -1,34 +1,24 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { Types } from 'mongoose';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
-  }
+  @Get('allusers')
+  findAll(@Query('filter') filter?: string,
+    @Query('page') page = 1,
+    @Query('limit') limit = 10) {
 
-  @Get()
-  findAll() {
-    return this.userService.findAll();
+    const sanitizedLimit = Math.min(Math.max(+limit || 10, 1), 100); // max 100 users per page
+    const sanitizedPage = Math.max(+page || 1, 1);
+    return this.userService.findAll({ filter, page: sanitizedPage, limit: sanitizedLimit });
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.userService.findOne(+id);
+  findOne(@Param('id') id: Types.ObjectId) {
+    return this.userService.findOne(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(+id, updateUserDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(+id);
-  }
 }
