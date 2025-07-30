@@ -41,19 +41,41 @@ export class UserService {
     }
   }
 
-  async findOne(id: Types.ObjectId) {
+  async findOne({id,email} : {id ?: Types.ObjectId, email ?: string}) {
     try {
-      if(!Types.ObjectId.isValid(id)){
+      if(id && !Types.ObjectId.isValid(id)){
         throw new HttpException("User not found",404)
       }
-      const userDetails = await this.userModel.findById(id)
+      const userDetails = await this.userModel.findOne({$or : [
+        {_id : id},
+        {email}
+      ]})
       return {userDetails}
     } catch (error) {
       throw new HttpException( error.message || "User not found", error.status || 400)
     }
   }
 
+  async findUsersWithOptions(params : object){
+    try {
+      const userDetails = await this.userModel.find(params)
+      return userDetails
+    } catch (error) {
+      console.log(error)
+      throw new HttpException('AN error occurred while fetching data',400)
+    }
+    
+  }
 
+  async findUserAndUpdate(searchParam : object, update : object){
+    try {
+      const userDetails = await this.userModel.findOneAndUpdate(searchParam,update,{new : true})
+      return userDetails
+    } catch (error) {
+      console.log(error)
+      throw new HttpException('AN error occurred while fetching data',400)
+    }
+  }
 
   async findOrCreate(condition: Partial<User>, data: Partial<User>) {
     let user = await this.userModel.findOne(condition);
