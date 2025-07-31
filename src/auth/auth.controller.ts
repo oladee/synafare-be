@@ -30,7 +30,7 @@ export class AuthController {
 
   @UseGuards(FirebaseAuthGuard)
   @Post('whoami')
-  async accSetup(@Req() req: Request){
+  async whoami(@Req() req: Request){
     return this.authService.whoami(req)
   }
 
