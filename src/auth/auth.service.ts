@@ -79,5 +79,26 @@ export class AuthService {
 
   }
 
+  async whoami(req: Request) {
+  const { id } = req.user;
+
+  try {
+    const { userDetails } = await this.userService.findOne({ id });
+
+    if (!userDetails) {
+      throw new HttpException("User not found", 404);
+    }
+
+    return {
+      message: "User fetched successfully",
+      data: userDetails,
+    };
+  } catch (error) {
+    console.error(error);
+    throw new HttpException(error.message || "Failed to fetch user", error.status || 400);
+  }
+  }
+  
+
   
 }
