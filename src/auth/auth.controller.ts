@@ -28,4 +28,10 @@ export class AuthController {
     return this.authService.accountSetup(setupdata,req)
   }
 
+  @UseGuards(FirebaseAuthGuard)
+  @Post('whoami')
+  async accSetup(@Req() req: Request){
+    return this.authService.whoami(req)
+  }
+
 }
