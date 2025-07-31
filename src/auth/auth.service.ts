@@ -47,7 +47,7 @@ export class AuthService {
       await this.firebaseService.verifySessionCookie(sessionCookie, true);
         res.cookie('syna_session', sessionCookie, {
         httpOnly: true,
-        secure: this.configService.get('NODE_ENV') == "dev" ? false : true,
+        secure: true,
         sameSite: 'none',
         signed : true,
         maxAge: expiresIn,
