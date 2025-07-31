@@ -1,11 +1,12 @@
 import { HttpException, Injectable } from '@nestjs/common';
-import { User } from './entities/user.entity';
+import { User, UserDocument } from './entities/user.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { FirebaseService } from 'src/utils/firebase/firebase.service';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+  constructor(@InjectModel(User.name) private userModel: Model<User>, private readonly firebaseService : FirebaseService) {}
 
   async findAll({filter,page,limit}:{filter ?:string, page : number, limit : number}) {
     try {
@@ -84,5 +85,18 @@ export class UserService {
       await user.save()
     }
     return user;
+  }
+
+  async deleteUser(uid: string) {
+    try {
+      await Promise.all([
+        this.firebaseService.auth.deleteUser(uid),
+        this.userModel.findOneAndDelete({firebaseUid : uid})
+      ])
+      return {message : `Successfully deleted user: ${uid}`}
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      throw new Error('User deletion failed');
+    }
   }
 }

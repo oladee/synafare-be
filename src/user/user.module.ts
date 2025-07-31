@@ -3,13 +3,14 @@ import { UserService } from './user.service';
 import { UserController } from './user.controller';
 import { User, UserSchema } from './entities/user.entity';
 import { MongooseModule } from '@nestjs/mongoose';
+import { FirebaseModule } from 'src/utils/firebase/firebase.module';
 
 @Module({
   imports : [
     MongooseModule.forFeature([{
       name : User.name,
       schema : UserSchema
-    },])
+    },]),FirebaseModule
   ],
   controllers: [UserController],
   providers: [UserService],

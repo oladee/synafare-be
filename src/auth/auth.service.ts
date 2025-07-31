@@ -1,32 +1,33 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { HttpException, Injectable, UnauthorizedException } from '@nestjs/common';
 // import * as admin from 'firebase-admin';
 import { UserService } from '../user/user.service';
 import { ConfigService } from '@nestjs/config';
-import { FirebaseService } from 'src/firebase/firebase.service';
+import { FirebaseService } from 'src/utils/firebase/firebase.service';
 import { loginDto } from './dto/login.dto';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { OtpService } from 'src/otp/otp.service';
+import { accSetupDto } from './dto/acc-setup.dto';
+import { IdlookupService } from 'src/utils/idlookup/idlookup.service';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly userService: UserService, private configService: ConfigService,private readonly firebaseService: FirebaseService,private readonly otpservice : OtpService) {}
+  constructor(private readonly userService: UserService, private configService: ConfigService,private readonly firebaseService: FirebaseService,private readonly otpservice : OtpService,private readonly idlookupservice : IdlookupService) {}
 
   async login(loginData: loginDto, res:Response) {
     try {
       const {idToken} =loginData
       const decoded = await this.firebaseService.verifyIdToken(idToken);
-      const userRecord = await this.firebaseService.getUser(decoded.uid);
+      await this.firebaseService.getUser(decoded.uid);
 
       const expiresIn = 7 * 24 * 60 * 60 * 1000; // 7 days
 
-      const { uid, email, name, picture } = decoded;
+      const { uid, email, picture } = decoded;
 
       const user = await this.userService.findOrCreate(
         { firebaseUid: uid },
         {
           firebaseUid: uid,
           email: email,
-          name: name,
           avatar: picture,
         }
       );
@@ -59,4 +60,24 @@ export class AuthService {
         throw new HttpException(err.message || 'Invalid ID token/Bad Request', err.status || 400)
     }
   }
+
+  async accountSetup (setupData : accSetupDto, req:Request){
+    const { id } = req.user;
+    try {
+      // confirm id_type and id_number
+      await Promise.all([
+        this.idlookupservice.lookupDocuments({doctype : setupData.id_type, doc_number : setupData.id_number}),
+        this.idlookupservice.lookupDocuments({doctype : "bvn", doc_number : setupData.bvn})
+      ])
+
+      await this.userService.findUserAndUpdate({_id : id},{...setupData})
+      return {message : "Account setup successful"}
+    } catch (error) {
+      console.log(error)
+      throw new HttpException(error.message || "An error occurred while setting up account", error.status || 400)
+    }
+
+  }
+
+  
 }

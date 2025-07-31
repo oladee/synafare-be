@@ -1,4 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document, HydratedDocument } from 'mongoose';
 
 @Schema({timestamps :  true})
 export class User {
@@ -12,7 +13,25 @@ export class User {
   email_confirmed: boolean;
 
   @Prop()
-  name: string;
+  first_name: string;
+
+  @Prop()
+  last_name: string;
+
+  @Prop()
+  phn_no: string;
+
+  @Prop({enum : ["installer","distributor","supplier"]})
+  nature_of_solar_business: string;
+
+  @Prop({enum : ["nin","dl","vin"]})
+  id_type: string;
+
+  @Prop()
+  id_number: string;
+
+  @Prop()
+  bvn: string;
 
   @Prop()
   avatar: string;
@@ -23,6 +42,8 @@ export class User {
   @Prop()
   otpExpiry : Date
 }
+
+export type UserDocument = HydratedDocument<User>;
 
 
 export const UserSchema = SchemaFactory.createForClass(User);

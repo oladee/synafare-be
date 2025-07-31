@@ -1,7 +1,9 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { loginDto } from './dto/login.dto';
-import { Response } from 'express';
+import { Request, Response } from 'express';
+import { FirebaseAuthGuard } from './auth.guard';
+import { accSetupDto } from './dto/acc-setup.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -19,4 +21,11 @@ export class AuthController {
     res.clearCookie('syna_session');
     return {message : "Logged Out"}
   }
+
+  @UseGuards(FirebaseAuthGuard)
+  @Post('setup')
+  async accSetup(@Body() setupdata : accSetupDto, @Req() req: Request){
+    return this.authService.accountSetup(setupdata,req)
+  }
+
 }

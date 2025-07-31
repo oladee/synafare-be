@@ -21,4 +21,9 @@ export class UserController {
     return this.userService.findOne({id});
   }
 
+  @Delete(':id')
+  deleteOne(@Param('id') id:string) {
+    return this.userService.deleteUser(id);
+  }
+
 }
