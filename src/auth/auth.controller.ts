@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, Get,Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { loginDto } from './dto/login.dto';
 import { Request, Response } from 'express';
@@ -29,7 +29,7 @@ export class AuthController {
   }
 
   @UseGuards(FirebaseAuthGuard)
-  @Post('whoami')
+  @Get('whoami')
   async whoami(@Req() req: Request){
     return this.authService.whoami(req)
   }
