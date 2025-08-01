@@ -21,6 +21,7 @@ export class FirebaseAuthGuard implements CanActivate {
       if(userDetails)request['user'] = userDetails; // Attach user info to request
       return true;
     } catch (err) {
+      console.log(err)
       throw new UnauthorizedException('Invalid or expired session cookie');
     }
   }
