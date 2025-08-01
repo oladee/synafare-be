@@ -35,25 +35,39 @@ export class OtpService {
     
   }
 
-  async validateOtp(email: string, otp: string){
-    try {
-      const userDetails = await this.userService.findUsersWithOptions({email,otpExpiry : {$gte : new Date()}})
-      if(userDetails && userDetails[0]?.otp == otp){
-        const result = await this.userService.findUserAndUpdate({email},{email_confirmed : true, $unset : {otp : '',otpExpiry : ''}})
+  async validateOtp(email: string, otp: string) {
+  try {
+    const userDetails = await this.userService.findUsersWithOptions({
+      email,
+      otpExpiry: { $gte: new Date() },
+    });
 
-        console.log(result)
-        
-        return {message : " You have been Successfully verified"}
-      }
-      if(userDetails && userDetails[0]?.otp != otp){
-        return {message : "Invalid otp"}
-      }
-      if(!userDetails){
-        throw new HttpException("Otp expired, please request a new one", 400)
-      }
-    } catch (error) {
-      console.log(error)
-      throw new HttpException(error.message || "An error occured while verifying you", 405)
+    if (userDetails.length === 0) {
+      throw new HttpException("Otp expired, please request a new one", 400);
     }
+
+    const user = userDetails[0];
+
+    if (user.otp !== otp) {
+      return { message: "Invalid otp" };
+    }
+
+    const result = await this.userService.findUserAndUpdate(
+      { email },
+      {
+        email_confirmed: true,
+        $unset: { otp: "", otpExpiry: "" },
+      }
+    );
+
+    return { message: "You have been successfully verified" };
+  } catch (error) {
+    console.log(error);
+    throw new HttpException(
+      error.message || "An error occurred while verifying you",
+      405
+    );
   }
+}
+
 }
