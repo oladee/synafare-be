@@ -39,7 +39,10 @@ export class OtpService {
     try {
       const userDetails = await this.userService.findUsersWithOptions({email,otpExpiry : {$gte : new Date()}})
       if(userDetails && userDetails[0]?.otp == otp){
-        await this.userService.findUserAndUpdate({email},{email_confirmed : true, $unset : {otp : '',otpExpiry : ''}})
+        const result = await this.userService.findUserAndUpdate({email},{email_confirmed : true, $unset : {otp : '',otpExpiry : ''}})
+
+        console.log(result)
+        
         return {message : " You have been Successfully verified"}
       }
       if(userDetails && userDetails[0]?.otp != otp){

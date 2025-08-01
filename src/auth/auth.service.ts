@@ -26,7 +26,7 @@ export class AuthService {
       const { uid, email, picture } = decoded;
 
       const user = await this.userService.findOrCreate(
-        { firebaseUid: uid },
+        { email },
         {
           firebaseUid: uid,
           email: email,
