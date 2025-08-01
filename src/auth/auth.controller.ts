@@ -3,7 +3,7 @@ import { AuthService, FileSizeValidationPipe } from './auth.service';
 import { loginDto } from './dto/login.dto';
 import { Request, Response } from 'express';
 import { FirebaseAuthGuard } from './auth.guard';
-import { accSetupDto, businessSetup } from './dto/acc-setup.dto';
+import { accSetupDto, BusinessSetupDto } from './dto/acc-setup.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import {Express} from "express"
 
@@ -41,9 +41,16 @@ export class AuthController {
       ],
       {
         dest: 'uploads/',
+        fileFilter: (req, file, cb) => {
+        const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+        if (!allowedTypes.includes(file.mimetype)) {
+          return cb(new BadRequestException('Invalid file type.'), false);
+        }
+        cb(null, true);
+      },
       },
   ),)
-  businessSetup(@Body() businessData: businessSetup, @Req() request:Request, @UploadedFiles(new FileSizeValidationPipe()) files : {
+  businessSetup(@Body() businessData: BusinessSetupDto, @Req() request:Request, @UploadedFiles(new FileSizeValidationPipe()) files : {
       cac_certificate: Express.Multer.File[];
       bank_statement: Express.Multer.File[];
     }){

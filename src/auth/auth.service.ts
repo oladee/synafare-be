@@ -6,7 +6,7 @@ import { FirebaseService } from 'src/utils/firebase/firebase.service';
 import { loginDto } from './dto/login.dto';
 import { Request, Response } from 'express';
 import { OtpService } from 'src/otp/otp.service';
-import { accSetupDto, businessSetup } from './dto/acc-setup.dto';
+import { accSetupDto, BusinessSetupDto } from './dto/acc-setup.dto';
 import { IdlookupService } from 'src/utils/idlookup/idlookup.service';
 import {v2 as Cloudinary, UploadApiResponse} from 'cloudinary'
 import * as fs from "fs"
@@ -81,7 +81,7 @@ export class AuthService {
 
   }
 
-  async businessSetup(businessData: businessSetup, files :{ cac: Express.Multer.File; bank: Express.Multer.File }, req: Request) {
+  async businessSetup(businessData: BusinessSetupDto, files :{ cac: Express.Multer.File; bank: Express.Multer.File }, req: Request) {
     let cacUpload: UploadApiResponse | undefined;
 
     let bankUpload: UploadApiResponse | undefined;
@@ -92,7 +92,7 @@ export class AuthService {
       await this.idlookupservice.lookupDocuments({doctype : "cac", doc_number : businessData.reg_number,company_name : businessData.business_name})
 
       if (files?.cac) {
-        const cacUpload = await this.cloudinary.uploader.upload(files.cac.path, {
+        cacUpload = await this.cloudinary.uploader.upload(files.cac.path, {
           folder: 'cac_certificates',
         });
         fs.unlinkSync(files.cac.path); // delete local file
@@ -100,7 +100,7 @@ export class AuthService {
       }
 
       if (files.bank) {
-        const bankUpload = await this.cloudinary.uploader.upload(files.bank.path, {
+        bankUpload = await this.cloudinary.uploader.upload(files.bank.path, {
           folder: 'bank_statements',
         });
         fs.unlinkSync(files.bank.path); // delete local file

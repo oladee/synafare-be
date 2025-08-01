@@ -39,7 +39,7 @@ export class accSetupDto{
     bvn: string;
 }
 
-export class businessSetup {
+export class BusinessSetupDto {
     @IsString()
     business_name : string
 
@@ -60,9 +60,9 @@ export class businessSetup {
 
     @IsString()
     @IsOptional()
-    cac_certificate : string
+    cac_certificate ?: string
     
     @IsString()
     @IsOptional()
-    bank_statement : string
+    bank_statement ?: string
 }
