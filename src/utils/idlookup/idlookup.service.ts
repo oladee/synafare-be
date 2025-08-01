@@ -52,7 +52,6 @@ export class IdlookupService {
           } else {
             query = `${doc_data.doctype}=${doc_data.doc_number}`;
           }
-
           await axios.get(`${this.da_base_url}${url}/?${query}`,this.da_config)
 
           return {message : "User Id validated"}
