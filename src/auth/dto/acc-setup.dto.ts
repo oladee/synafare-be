@@ -1,4 +1,4 @@
-import { IsEnum, IsString } from "class-validator";
+import { IsEnum, IsOptional, IsString } from "class-validator";
 
 
 
@@ -37,4 +37,32 @@ export class accSetupDto{
 
     @IsString()
     bvn: string;
+}
+
+export class businessSetup {
+    @IsString()
+    business_name : string
+
+    @IsString()
+    reg_number : string
+
+    @IsString()
+    business_address : string
+
+    @IsString()
+    city : string
+
+    @IsString()
+    state : string
+
+    @IsString()
+    country : string
+
+    @IsString()
+    @IsOptional()
+    cac_certificate : string
+    
+    @IsString()
+    @IsOptional()
+    bank_statement : string
 }

@@ -1,4 +1,4 @@
-import { HttpException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ArgumentMetadata, ForbiddenException, HttpException, Inject, Injectable, PipeTransform, UnauthorizedException } from '@nestjs/common';
 // import * as admin from 'firebase-admin';
 import { UserService } from '../user/user.service';
 import { ConfigService } from '@nestjs/config';
@@ -6,12 +6,14 @@ import { FirebaseService } from 'src/utils/firebase/firebase.service';
 import { loginDto } from './dto/login.dto';
 import { Request, Response } from 'express';
 import { OtpService } from 'src/otp/otp.service';
-import { accSetupDto } from './dto/acc-setup.dto';
+import { accSetupDto, businessSetup } from './dto/acc-setup.dto';
 import { IdlookupService } from 'src/utils/idlookup/idlookup.service';
+import {v2 as Cloudinary, UploadApiResponse} from 'cloudinary'
+import * as fs from "fs"
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly userService: UserService, private configService: ConfigService,private readonly firebaseService: FirebaseService,private readonly otpservice : OtpService,private readonly idlookupservice : IdlookupService) {}
+  constructor(private readonly userService: UserService, private configService: ConfigService,private readonly firebaseService: FirebaseService,private readonly otpservice : OtpService,private readonly idlookupservice : IdlookupService,@Inject('CLOUDINARY') private readonly cloudinary: typeof Cloudinary) {}
 
   async login(loginData: loginDto, res:Response) {
     try {
@@ -79,6 +81,61 @@ export class AuthService {
 
   }
 
+  async businessSetup(businessData: businessSetup, files :{ cac: Express.Multer.File; bank: Express.Multer.File }, req: Request) {
+    let cacUpload: UploadApiResponse | undefined;
+
+    let bankUpload: UploadApiResponse | undefined;
+
+    try {
+      const { id } = req.user;
+
+      await this.idlookupservice.lookupDocuments({doctype : "cac", doc_number : businessData.reg_number})
+
+      if (files?.cac) {
+        const cacUpload = await this.cloudinary.uploader.upload(files.cac.path, {
+          folder: 'cac_certificates',
+        });
+        fs.unlinkSync(files.cac.path); // delete local file
+        businessData.cac_certificate = cacUpload.secure_url; // store the URL
+      }
+
+      if (files.bank) {
+        const bankUpload = await this.cloudinary.uploader.upload(files.bank.path, {
+          folder: 'bank_statements',
+        });
+        fs.unlinkSync(files.bank.path); // delete local file
+        businessData.bank_statement = bankUpload.secure_url; // store the URL
+      }
+
+      await this.userService.findUserAndUpdate({ _id: id }, businessData);
+
+      return {
+        message: 'Business setup successful',
+      };
+
+    } catch (error) {
+      if (cacUpload?.public_id) {
+        await this.cloudinary.uploader.destroy(cacUpload.public_id);
+      }
+      if (bankUpload?.public_id) {
+        await this.cloudinary.uploader.destroy(bankUpload.public_id);
+      }
+
+      // Delete local files if still present
+      if (files?.cac && fs.existsSync(files.cac.path)) {
+        fs.unlinkSync(files.cac.path);
+      }
+      if (files?.bank && fs.existsSync(files.bank.path)) {
+        fs.unlinkSync(files.bank.path);
+      }
+
+      throw new HttpException(
+        error.message || 'An error occurred while setting up your account',
+        error.status || 400
+      );
+    }
+  }
+
   async whoami(req: Request) {
   const { id } = req.user;
 
@@ -101,4 +158,35 @@ export class AuthService {
   
 
   
+}
+
+export class FileSizeValidationPipe implements PipeTransform {
+  private readonly maxSize = 10 * 1024 * 1024; // 10 MB
+
+  transform(value: any, metadata: ArgumentMetadata) {
+    if (!value) return value;
+
+    const files = this.flattenFiles(value);
+
+    for (const file of files) {
+      if (file.size > this.maxSize) {
+        throw new ForbiddenException(`${file.originalname} is too large`);
+      }
+    }
+
+    return value;
+  }
+
+  private flattenFiles(value: any): Express.Multer.File[] {
+    if (Array.isArray(value)) {
+      return value;
+    }
+
+    if (typeof value === 'object') {
+      const fileArrays = Object.values(value).filter(Array.isArray);
+      return fileArrays.flat();
+    }
+
+    return [value];
+  }
 }

@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, HydratedDocument } from 'mongoose';
+import mongoose, { Document, HydratedDocument } from 'mongoose';
 
 @Schema({timestamps :  true})
 export class User {
@@ -44,6 +44,38 @@ export class User {
 }
 
 export type UserDocument = HydratedDocument<User>;
+
+
+export class Business_Information {
+  @Prop()
+  business_name : string
+
+  @Prop()
+  reg_number : string
+
+  @Prop()
+  cac_certificate : string
+
+  @Prop()
+  bank_statement : string
+
+  @Prop()
+  business_address : string
+
+  @Prop()
+  city : string
+
+  @Prop()
+  state : string
+
+  @Prop()
+  country : string
+
+  @Prop({type : mongoose.Schema.Types.ObjectId, ref : User})
+  user : User
+}
+
+export const BusinessInformationSchema = SchemaFactory.createForClass(Business_Information)
 
 
 export const UserSchema = SchemaFactory.createForClass(User);
