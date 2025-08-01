@@ -17,12 +17,11 @@ export class AuthService {
 
   async login(loginData: loginDto, res:Response) {
     try {
-      const {idToken} =loginData
+      const {idToken} = loginData
       const decoded = await this.firebaseService.verifyIdToken(idToken);
       await this.firebaseService.getUser(decoded.uid);
 
       const expiresIn = 7 * 24 * 60 * 60 * 1000; // 7 days
-
       const { uid, email, picture } = decoded;
 
       const user = await this.userService.findOrCreate(

@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MailService } from 'src/mail/mail.service';
@@ -21,14 +21,17 @@ export class OtpService {
         if(new Date(userDetails.otpExpiry) > now){
           throw new HttpException("Looks like we sent you one recently, kindly check for that and input in the fields", 400)
         }
+
+        const otp = Math.floor(10000 + Math.random() * 90000).toString();
+
+        const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+        await this.userService.findUserAndUpdate({email},{otpExpiry : expiresAt,otp})
+
+        await this.mailService.sendUserOtp(email, otp);
+      }else{
+        throw new BadRequestException("User doesn't exist")
       }
-      const otp = Math.floor(10000 + Math.random() * 90000).toString();
-
-      const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
-
-      await this.userService.findUserAndUpdate({email},{otpExpiry : expiresAt,otp})
-
-      await this.mailService.sendUserOtp(email, otp);
     } catch (error) {
       throw new HttpException(error.message, 400)
     }
