@@ -1,4 +1,4 @@
-import { IsEnum, IsString } from "class-validator";
+import { IsEnum, IsOptional, IsString } from "class-validator";
 
 export enum validDocs {
     nin = 'nin',
@@ -17,4 +17,8 @@ export class documentLookup {
 
     @IsString()
     doc_number :  string
+
+    @IsOptional()
+    @IsString()
+    company_name ?: string
 }

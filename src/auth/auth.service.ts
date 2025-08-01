@@ -89,7 +89,7 @@ export class AuthService {
     try {
       const { id } = req.user;
 
-      await this.idlookupservice.lookupDocuments({doctype : "cac", doc_number : businessData.reg_number})
+      await this.idlookupservice.lookupDocuments({doctype : "cac", doc_number : businessData.reg_number,company_name : businessData.business_name})
 
       if (files?.cac) {
         const cacUpload = await this.cloudinary.uploader.upload(files.cac.path, {

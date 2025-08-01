@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Get,Req, Res, UseGuards, UseInterceptors, UploadedFile, UploadedFiles } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, Get,Req, Res, UseGuards, UseInterceptors, UploadedFile, UploadedFiles, BadRequestException } from '@nestjs/common';
 import { AuthService, FileSizeValidationPipe } from './auth.service';
 import { loginDto } from './dto/login.dto';
 import { Request, Response } from 'express';
@@ -47,6 +47,9 @@ export class AuthController {
       cac_certificate: Express.Multer.File[];
       bank_statement: Express.Multer.File[];
     }){
+    if (!files?.cac_certificate?.length || !files?.bank_statement?.length) {
+      throw new BadRequestException('cac_certificate and bank_statement are required.');
+    }
     const uploadFiles = {
       cac: files.cac_certificate[0],
       bank: files.bank_statement[0],

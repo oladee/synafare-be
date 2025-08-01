@@ -31,26 +31,27 @@ export class IdlookupService {
                 url = "nin"
                 break;
               case "dl":
-                  url = "dl"
-                  break;
+                url = "dl"
+                break;
               case "bvn":
-                  url = "bvn/full"
-                  break;
+                url = "bvn/full"
+                break;
               case "vin":
-                  url = "vin"
-                  break;
+                url = "vin"
+                break;
               case "cac":
-                  url = "cac/basic"
-                  break;
-                  default:
+                url = "cac/basic"
+                break;
+                default:
               throw new Error(`Invalid document type`);
           }
 
-          await axios.get(`${this.da_base_url}${url}/?${doc_data.doctype}=${doc_data.doc_number}`,this.da_config)
+          await axios.get(`${this.da_base_url}${url}/?${doc_data.doctype == 'cac' ? "rc_number" : doc_data.doctype}=${doc_data.doc_number}${doc_data.doctype == "cac" && `&company_type=${doc_data?.company_name}`}`,this.da_config)
 
           return {message : "User Id validated"}
 
         } catch (error) {
+          console.log(error)
           throw new HttpException(`Looks like your ${doc_data.doctype} is incorrect`, error.status || 400)
         }
     }
