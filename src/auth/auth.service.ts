@@ -68,8 +68,8 @@ export class AuthService {
     try {
       // confirm id_type and id_number
       await Promise.all([
-        this.idlookupservice.lookupDocuments({doctype : setupData.id_type, doc_number : setupData.id_number}),
-        this.idlookupservice.lookupDocuments({doctype : "bvn", doc_number : setupData.bvn})
+        this.idlookupservice.lookupDocuments({doctype : setupData.id_type, doc_number : String(setupData.id_number)}),
+        this.idlookupservice.lookupDocuments({doctype : "bvn", doc_number : String(setupData.bvn)})
       ])
 
       await this.userService.findUserAndUpdate({_id : id},{...setupData})
