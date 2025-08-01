@@ -38,11 +38,11 @@ export class OtpService {
   async validateOtp(email: string, otp: string){
     try {
       const userDetails = await this.userService.findUsersWithOptions({email,otpExpiry : {$gte : new Date()}})
-      if(userDetails && userDetails[0].otp == otp){
+      if(userDetails && userDetails[0]?.otp == otp){
         await this.userService.findUserAndUpdate({email},{email_confirmed : true, $unset : {otp : '',otpExpiry : ''}})
         return {message : " You have been Successfully verified"}
       }
-      if(userDetails && userDetails[0].otp != otp){
+      if(userDetails && userDetails[0]?.otp != otp){
         return {message : "Invalid otp"}
       }
       if(!userDetails){
