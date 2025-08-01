@@ -4,7 +4,7 @@ import { loginDto } from './dto/login.dto';
 import { Request, Response } from 'express';
 import { FirebaseAuthGuard } from './auth.guard';
 import { accSetupDto, businessSetup } from './dto/acc-setup.dto';
-import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import {Express} from "express"
 
 @Controller('auth')
