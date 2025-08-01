@@ -41,11 +41,14 @@ export class User {
 
   @Prop()
   otpExpiry : Date
+
+  @Prop({default : "inactive", enum : ["active","inactive"]})
+  account_status : string
 }
 
 export type UserDocument = HydratedDocument<User>;
 
-
+@Schema({timestamps :  true})
 export class Business_Information {
   @Prop()
   business_name : string
@@ -71,7 +74,7 @@ export class Business_Information {
   @Prop()
   country : string
 
-  @Prop({type : mongoose.Schema.Types.ObjectId, ref : User})
+  @Prop({type : mongoose.Schema.Types.ObjectId, ref : 'User', unique : true})
   user : User
 }
 

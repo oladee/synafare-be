@@ -1,4 +1,5 @@
 import { IsEnum, IsOptional, IsString } from "class-validator";
+import { Types } from "mongoose";
 
 
 
@@ -57,6 +58,10 @@ export class BusinessSetupDto {
 
     @IsString()
     country : string
+
+    @IsString()
+    @IsOptional()
+    user ?: string
 
     @IsString()
     @IsOptional()

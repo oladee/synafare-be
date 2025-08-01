@@ -7,13 +7,23 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get('allusers')
-  findAll(@Query('filter') filter?: string,
+  findAll(@Query('id') filter?: string,
+    @Query('page') page = 1,
+    @Query('limit') limit = 10) {
+      console.log('here')
+    const sanitizedLimit = Math.min(Math.max(+limit || 10, 1), 100); // max 100 users per page
+    const sanitizedPage = Math.max(+page || 1, 1);
+    return this.userService.findAll({ filter, page: sanitizedPage, limit: sanitizedLimit });
+  }
+
+  @Get('allbusinesses')
+  findBusinesses(@Query('id') filter?: string,
     @Query('page') page = 1,
     @Query('limit') limit = 10) {
 
     const sanitizedLimit = Math.min(Math.max(+limit || 10, 1), 100); // max 100 users per page
     const sanitizedPage = Math.max(+page || 1, 1);
-    return this.userService.findAll({ filter, page: sanitizedPage, limit: sanitizedLimit });
+    return this.userService.findBusinesses({ filter, page: sanitizedPage, limit: sanitizedLimit });
   }
 
   @Get(':id')
@@ -25,5 +35,7 @@ export class UserController {
   deleteOne(@Param('id') id:string) {
     return this.userService.deleteUser(id);
   }
+
+  
 
 }

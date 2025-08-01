@@ -107,8 +107,7 @@ export class AuthService {
         businessData.bank_statement = bankUpload.secure_url; // store the URL
       }
 
-      await this.userService.findUserAndUpdate({ _id: id }, businessData);
-
+      await this.userService.createBusiness( {...businessData,user : id});
       return {
         message: 'Business setup successful',
       };
@@ -130,7 +129,7 @@ export class AuthService {
       }
 
       throw new HttpException(
-        error.message || 'An error occurred while setting up your account',
+        error.message ||'An error occurred while setting up your account',
         error.status || 400
       );
     }

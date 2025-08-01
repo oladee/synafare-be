@@ -1,25 +1,22 @@
-import { HttpException, Injectable } from '@nestjs/common';
-import { User, UserDocument } from './entities/user.entity';
+import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
+import { Business_Information, User } from './entities/user.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { FirebaseService } from 'src/utils/firebase/firebase.service';
+import { BusinessSetupDto } from 'src/auth/dto/acc-setup.dto';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectModel(User.name) private userModel: Model<User>, private readonly firebaseService : FirebaseService) {}
+  constructor(@InjectModel(User.name) private userModel: Model<User>, private readonly firebaseService : FirebaseService,@InjectModel(Business_Information.name) private businessModel: Model<Business_Information>) {}
 
   async findAll({filter,page,limit}:{filter ?:string, page : number, limit : number}) {
     try {
-      const allowedFilters = ["Creator", "User"]
-      if(filter && !allowedFilters.includes(filter)){
-        throw new HttpException("Bad Request",400)
-      }
 
       const skip = (page - 1) * limit;
       const query: any = {};
 
       if (filter) {
-        query.role = filter; // assuming "role" is the field to filter by
+        query._id = filter; // assuming "role" is the field to filter by
       }
 
       const [users, total] = await Promise.all([
@@ -97,6 +94,47 @@ export class UserService {
     } catch (error) {
       console.error('Error deleting user:', error);
       throw new Error('User deletion failed');
+    }
+  }
+
+  async createBusiness(businessData : BusinessSetupDto){
+    try {
+      const businessExist = await this.businessModel.findOne({user : businessData.user})
+      if(businessExist){
+        throw new BadRequestException("Duplicate Business Submission not allowed")
+      }
+      const newData = await this.businessModel.create(businessData)
+      return newData
+    } catch (error) {
+      throw new BadRequestException(error.message ||"An error occurred while creating business")
+    }
+  }
+
+  async findBusinesses({filter,page,limit}:{filter ?:string, page : number, limit : number}){
+    try {
+      const skip = (page - 1) * limit;
+      const query: any = {};
+
+      if (filter) {
+        query._id = filter; 
+      }
+
+      const [users, total] = await Promise.all([
+        this.businessModel.find(query).skip(skip).limit(limit),
+        this.businessModel.countDocuments(query),
+      ]);
+
+      return {
+        data: users,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+        },
+      };
+    } catch (error) {
+      throw new HttpException(error.message || 'Failed to fetch businesses', error.status || 500);
     }
   }
 }
