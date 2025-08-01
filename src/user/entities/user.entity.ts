@@ -44,6 +44,9 @@ export class User {
 
   @Prop({default : "inactive", enum : ["active","inactive"]})
   account_status : string
+
+  @Prop({default : "not_submitted", enum : ["submitted","not_submitted"]})
+  business_document : string
 }
 
 export type UserDocument = HydratedDocument<User>;

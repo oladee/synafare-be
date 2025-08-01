@@ -104,6 +104,7 @@ export class UserService {
         throw new BadRequestException("Duplicate Business Submission not allowed")
       }
       const newData = await this.businessModel.create(businessData)
+      await this.userModel.findByIdAndUpdate(businessData.user,{business_document : "submitted"})
       return newData
     } catch (error) {
       throw new BadRequestException(error.message ||"An error occurred while creating business")
