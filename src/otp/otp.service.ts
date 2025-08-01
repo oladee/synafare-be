@@ -50,7 +50,7 @@ export class OtpService {
       }
     } catch (error) {
       console.log(error)
-      throw new HttpException("An error occured while verifying you", 405)
+      throw new HttpException(error.message || "An error occured while verifying you", 405)
     }
   }
 }
