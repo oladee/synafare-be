@@ -47,13 +47,17 @@ export class AuthService {
       const sessionCookie = await this.firebaseService.createSessionCookie(idToken,expiresIn);
 
       await this.firebaseService.verifySessionCookie(sessionCookie, true);
-        res.cookie('syna_session', sessionCookie, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'none',
-        signed : true,
-        maxAge: expiresIn,
-        });
+
+      res.clearCookie("syna_session", { path: '/', httpOnly: true, signed: true, sameSite: 'none', secure: true });
+      
+      res.cookie('syna_session', sessionCookie, {
+      path: '/',
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      signed : true,
+      maxAge: expiresIn,
+      });
 
 
       return { message: 'Login successful', user };
