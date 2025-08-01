@@ -34,6 +34,8 @@ export class AuthService {
         }
       );
 
+      res.clearCookie("syna_session", { path: '/', httpOnly: true, signed: true, sameSite: 'none', secure: true});
+
       if(!user.email_confirmed){
         try {
           await this.otpservice.generateOtp(user.email)
