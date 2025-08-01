@@ -45,8 +45,15 @@ export class IdlookupService {
                 default:
               throw new Error(`Invalid document type`);
           }
+          let query = '';
 
-          await axios.get(`${this.da_base_url}${url}/?${doc_data.doctype == 'cac' ? "rc_number" : doc_data.doctype}=${doc_data.doc_number}${doc_data.doctype == "cac" && `&company_type=${doc_data?.company_name}`}`,this.da_config)
+          if (doc_data.doctype === 'cac') {
+            query = `rc_number=${doc_data.doc_number}&company_type=${doc_data.company_name}`;
+          } else {
+            query = `${doc_data.doctype}=${doc_data.doc_number}`;
+          }
+
+          await axios.get(`${this.da_base_url}${url}/?${query}`,this.da_config)
 
           return {message : "User Id validated"}
 
