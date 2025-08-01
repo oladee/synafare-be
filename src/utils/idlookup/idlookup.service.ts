@@ -54,7 +54,7 @@ export class IdlookupService {
           }
           const result = await axios.get(`${this.da_base_url}${url}/?${query}`,this.da_config)
 
-          return {message : "User Id validated", result}
+          return {message : "User Id validated", result : result.data}
 
         } catch (error) {
           console.log(error)
