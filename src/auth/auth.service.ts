@@ -48,8 +48,6 @@ export class AuthService {
 
       await this.firebaseService.verifySessionCookie(sessionCookie, true);
 
-      res.clearCookie("syna_session", { path: '/', httpOnly: true, signed: true, sameSite: 'none', secure: true });
-      
       res.cookie('syna_session', sessionCookie, {
       path: '/',
       httpOnly: true,
