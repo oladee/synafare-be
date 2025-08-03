@@ -7,7 +7,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.useGlobalPipes(new ValidationPipe({transform : true, transformOptions: {
-    enableImplicitConversion: true, // <- This line here
+    enableImplicitConversion: true,
   },}))
 
   app.enableCors({origin : ['http://localhost:3000','http://localhost:3001','http://localhost:5173','https://synafare-fe.vercel.app','https://www.synafare-fe.vercel.app'], credentials : true})

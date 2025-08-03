@@ -57,7 +57,7 @@ export class AuthService {
         httpOnly: true,
         secure: true,
         sameSite: 'none',
-        signed : true,
+        signed : false,
         expires
       });
 
