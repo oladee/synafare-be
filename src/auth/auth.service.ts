@@ -42,8 +42,6 @@ export class AuthService {
         }
         
       }
-
-      res.clearCookie("syna_session", { path: '/', httpOnly: true, signed: false, sameSite: 'none', secure: true });
         
       const sessionCookie = await this.firebaseService.createSessionCookie(idToken,expiresIn);
 
