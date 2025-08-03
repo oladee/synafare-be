@@ -28,6 +28,7 @@ export class FirebaseAuthGuard implements CanActivate {
 
   private extractTokenFromRequest(request: Request): string | undefined {
     if(request && request.signedCookies){
+      console.log(request.signedCookies)
       return request.signedCookies.syna_session
     }
     if(request && request.cookies){
