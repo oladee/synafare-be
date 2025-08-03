@@ -9,11 +9,9 @@ export class FirebaseAuthGuard implements CanActivate {
     constructor(private readonly firebaseService: FirebaseService, private readonly userService: UserService) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
-    const sessionCookie = request.signedCookies?.['syna_session'];
+    const sessionCookie = this.extractTokenFromRequest(request)
 
     if (!sessionCookie) {
-      console.log(request)
-      console.log(request?.signedCookies)
       throw new UnauthorizedException('Session cookie not found');
     }
 
