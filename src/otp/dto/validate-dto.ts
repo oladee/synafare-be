@@ -3,7 +3,7 @@ import { IsEmail, IsString, Length } from "class-validator";
 
 export class ValidateOtpDto {
   @IsEmail()
-  @Transform(({value})=>value.trim().lowerCase())
+  @Transform(({ value }) => value.trim().toLowerCase())
   email: string;
 
   @IsString()
