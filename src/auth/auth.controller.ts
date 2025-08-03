@@ -19,7 +19,7 @@ export class AuthController {
   
   @HttpCode(HttpStatus.OK)
   @Post('logout')
-  async logout(@Res({passthrough : true}) res) {
+  async logout(@Res({passthrough : true}) res : Response) {
     res.clearCookie('syna_session');
     return {message : "Logged Out"}
   }

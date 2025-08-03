@@ -47,13 +47,16 @@ export class AuthService {
 
       await this.firebaseService.verifySessionCookie(sessionCookie, true);
 
+      const expires = new Date();
+      expires.setDate(expires.getDate() + 7);
+
       res.cookie('syna_session', sessionCookie, {
         path: '/',
         httpOnly: true,
         secure: true,
         sameSite: 'none',
         signed : true,
-        maxAge: expiresIn,
+        expires
       });
 
 
