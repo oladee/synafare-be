@@ -55,8 +55,8 @@ export class AuthService {
         httpOnly: true,
         secure: true,
         sameSite: 'none',
-        signed : false,
-        expires
+        signed : true,
+        maxAge : expiresIn
       });
 
 
