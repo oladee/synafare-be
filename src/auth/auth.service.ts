@@ -43,7 +43,7 @@ export class AuthService {
         
       }
 
-      res.clearCookie("syna_session", { path: '/', httpOnly: true, signed: true, sameSite: 'none', secure: true });
+      res.clearCookie("syna_session", { path: '/', httpOnly: true, signed: false, sameSite: 'none', secure: true });
         
       const sessionCookie = await this.firebaseService.createSessionCookie(idToken,expiresIn);
 
@@ -57,7 +57,7 @@ export class AuthService {
         httpOnly: true,
         secure: true,
         sameSite: 'none',
-        signed : true,
+        signed : false,
         expires
       });
 
