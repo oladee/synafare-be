@@ -27,4 +27,11 @@ export class FirebaseAuthGuard implements CanActivate {
       throw new UnauthorizedException('Invalid or expired session cookie');
     }
   }
+
+  private extractTokenFromRequest(request: Request): string | undefined {
+    if(request && request.signedCookies){
+      return request.signedCookies.syna_session
+    }
+    return undefined
+  }
 }

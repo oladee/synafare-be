@@ -44,6 +44,7 @@ export class OtpService {
       email,
       otpExpiry: { $gte: new Date() },
     });
+    console.log(userDetails)
 
     if (userDetails.length === 0) {
       throw new HttpException("Otp expired, please request a new one", 400);
