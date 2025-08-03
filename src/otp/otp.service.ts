@@ -62,7 +62,7 @@ export class OtpService {
         $unset: { otp: "", otpExpiry: "" },
       }
     );
-
+    console.log("validate-result:",result)
     return { message: "You have been successfully verified" };
   } catch (error) {
     console.log(error);
