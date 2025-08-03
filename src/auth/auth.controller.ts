@@ -13,7 +13,7 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @Post('login')
-  async login(@Body() loginData : loginDto, @Res({passthrough : true})res:Response) {
+  async login(@Body() loginData : loginDto, @Res()res:Response) {
     return this.authService.login(loginData, res);
   }
   

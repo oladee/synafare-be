@@ -62,7 +62,7 @@ export class AuthService {
       });
 
 
-      return { message: 'Login successful', user };
+      return res.status(200).json({ message: 'Login successful', user });
     } catch (err) {
         console.log(err)
         throw new HttpException(err.message || 'Invalid ID token/Bad Request', err.status || 400)
