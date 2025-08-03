@@ -12,7 +12,7 @@ export class FirebaseAuthGuard implements CanActivate {
     const sessionCookie = request.signedCookies?.['syna_session'];
 
     if (!sessionCookie) {
-      console.log(request?.cookies)
+      console.log(request)
       console.log(request?.signedCookies)
       throw new UnauthorizedException('Session cookie not found');
     }
