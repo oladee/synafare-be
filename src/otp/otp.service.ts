@@ -44,7 +44,7 @@ export class OtpService {
       email,
       otpExpiry: { $gte: new Date() },
     });
-    console.log(userDetails)
+    console.log("user details: ",userDetails)
 
     if (userDetails.length === 0) {
       throw new HttpException("Otp expired, please request a new one", 400);
@@ -52,8 +52,8 @@ export class OtpService {
 
     const user = userDetails[0];
 
-    if (user.otp !== otp) {
-      return { message: "Invalid otp" };
+    if (user.otp != otp) {
+      throw new BadRequestException("Invalid Otp")
     }
 
     const result = await this.userService.findUserAndUpdate(
