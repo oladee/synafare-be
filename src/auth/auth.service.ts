@@ -10,10 +10,11 @@ import { accSetupDto, BusinessSetupDto } from './dto/acc-setup.dto';
 import { IdlookupService } from 'src/utils/idlookup/idlookup.service';
 import {v2 as Cloudinary, UploadApiResponse} from 'cloudinary'
 import * as fs from "fs"
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly userService: UserService, private configService: ConfigService,private readonly firebaseService: FirebaseService,private readonly otpservice : OtpService,private readonly idlookupservice : IdlookupService,@Inject('CLOUDINARY') private readonly cloudinary: typeof Cloudinary) {}
+  constructor(private readonly userService: UserService, private configService: ConfigService,private readonly firebaseService: FirebaseService,private readonly otpservice : OtpService,private readonly idlookupservice : IdlookupService,@Inject('CLOUDINARY') private readonly cloudinary: typeof Cloudinary,private jwtService: JwtService,) {}
 
   async login(loginData: loginDto, res:Response) {
     try {
@@ -47,6 +48,9 @@ export class AuthService {
 
       await this.firebaseService.verifySessionCookie(sessionCookie, true);
 
+      const payload = { sub: sessionCookie};
+      const token = await this.jwtService.signAsync(payload);
+
       const expires = new Date();
       expires.setDate(expires.getDate() + 7);
 
@@ -60,7 +64,7 @@ export class AuthService {
       });
 
 
-      return res.status(200).json({ message: 'Login successful', user });
+      return res.status(200).json({ message: 'Login successful', user, token});
     } catch (err) {
         console.log(err)
         throw new HttpException(err.message || 'Invalid ID token/Bad Request', err.status || 400)

@@ -7,9 +7,14 @@ import { OtpModule } from 'src/otp/otp.module';
 import { IdlookupModule } from 'src/utils/idlookup/idlookup.module';
 import { FirebaseAuthGuard } from './auth.guard';
 import { CloudinaryConfig } from 'src/config/cloudinary.config';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
-  imports : [UserModule,FirebaseModule,OtpModule,forwardRef(() => IdlookupModule)],
+  imports : [UserModule,FirebaseModule,OtpModule,forwardRef(() => IdlookupModule),JwtModule.register({
+    global : true,
+    secret : process.env.JWT_SECRET,
+    signOptions : {expiresIn : '7d'}
+  })],
   controllers: [AuthController],
   providers: [AuthService,FirebaseAuthGuard,CloudinaryConfig],
   exports: [FirebaseAuthGuard]

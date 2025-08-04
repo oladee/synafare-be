@@ -3,13 +3,24 @@ import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from
 import { Request } from 'express';
 import { UserService } from 'src/user/user.service';
 import { FirebaseService } from 'src/utils/firebase/firebase.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class FirebaseAuthGuard implements CanActivate {
-    constructor(private readonly firebaseService: FirebaseService, private readonly userService: UserService) {}
+    constructor(private readonly firebaseService: FirebaseService, private readonly userService: UserService,private jwtService: JwtService) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const JWT_SECRET = process.env.JWT_SECRET
     const request = context.switchToHttp().getRequest<Request>();
-    const sessionCookie = this.extractTokenFromRequest(request)
+    const token = this.extractTokenFromHeader(request)
+    let sessionCookie : string | undefined;
+    if(token){
+      const payload = await this.jwtService.verifyAsync(token,{
+        secret: JWT_SECRET
+      })
+      sessionCookie = payload.sub
+    }else{
+      sessionCookie = this.extractTokenFromRequest(request)
+    }
 
     if (!sessionCookie) {
       throw new UnauthorizedException('Session cookie not found');
@@ -37,4 +48,20 @@ export class FirebaseAuthGuard implements CanActivate {
     }
     return undefined
   }
+
+  private extractTokenFromHeader(req: Request): string | null {
+    const authHeader = req.headers['authorization'] || req.headers['Authorization'];
+
+    if (!authHeader || typeof authHeader !== 'string') {
+      return null;
+    }
+
+    const [scheme, token] = authHeader.split(' ');
+
+    if (scheme !== 'Bearer' || !token) {
+      return null;
+    }
+
+    return token;
+}
 }
