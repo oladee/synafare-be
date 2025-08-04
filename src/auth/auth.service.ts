@@ -19,12 +19,16 @@ export class AuthService {
   async login(loginData: loginDto, res:Response) {
     try {
       const {idToken} = loginData
+      console.log('decode token')
       const decoded = await this.firebaseService.verifyIdToken(idToken);
+      
       await this.firebaseService.getUser(decoded.uid);
+      console.log('get user details')
 
       const expiresIn = 7 * 24 * 60 * 60 * 1000; // 7 days
       const { uid, email, picture } = decoded;
 
+      console.log('grabbing  user details')
       const user = await this.userService.findOrCreate(
         { email },
         {
@@ -32,7 +36,11 @@ export class AuthService {
           email: email,
           avatar: picture,
         }
+        
       );
+
+      console.log("user details:", user)
+
 
       if(!user.email_confirmed){
         try {
@@ -43,13 +51,19 @@ export class AuthService {
         }
         
       }
+
+      console.log("creating session cookie", idToken)
         
       const sessionCookie = await this.firebaseService.createSessionCookie(idToken,expiresIn);
+
+      console.log("session cookie: ", sessionCookie)
 
       await this.firebaseService.verifySessionCookie(sessionCookie, true);
 
       const payload = { sub: sessionCookie};
+      console.log("generate token ")
       const token = await this.jwtService.signAsync(payload);
+      console.log(token)
 
       const expires = new Date();
       expires.setDate(expires.getDate() + 7);
@@ -64,7 +78,7 @@ export class AuthService {
       });
 
 
-      return res.status(200).json({ message: 'Login successful', user, token});
+      return { message: 'Login successful', user, token};
     } catch (err) {
         console.log(err)
         throw new HttpException(err.message || 'Invalid ID token/Bad Request', err.status || 400)

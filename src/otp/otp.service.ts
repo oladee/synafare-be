@@ -13,7 +13,9 @@ export class OtpService {
   async generateOtp(email: string): Promise<void> {
     try {
       const now = new Date()
+      console.log("getting otp user details")
       const {userDetails} = await this.userService.findOne({email})
+      console.log("user details", userDetails)
       if(userDetails){
         if(userDetails?.email_confirmed){
         throw new HttpException("Email Already Confirmed",402)
@@ -26,9 +28,15 @@ export class OtpService {
 
         const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
+        console.log("find user and attach otpexpiry")
         await this.userService.findUserAndUpdate({email},{otpExpiry : expiresAt,otp})
 
+        console.log("otpexpiry added")
+
+        console.log("Sending mail")
         await this.mailService.sendUserOtp(email, otp);
+        console.log(" mail sent")
+        return;
       }else{
         throw new BadRequestException("User doesn't exist")
       }
