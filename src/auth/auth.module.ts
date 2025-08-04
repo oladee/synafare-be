@@ -8,9 +8,12 @@ import { IdlookupModule } from 'src/utils/idlookup/idlookup.module';
 import { FirebaseAuthGuard } from './auth.guard';
 import { CloudinaryConfig } from 'src/config/cloudinary.config';
 import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports : [UserModule,FirebaseModule,OtpModule,forwardRef(() => IdlookupModule),JwtModule.register({
+  imports : [ConfigModule.forRoot({
+    isGlobal : true
+  }),UserModule,FirebaseModule,OtpModule,forwardRef(() => IdlookupModule),JwtModule.register({
     global : true,
     secret : process.env.JWT_SECRET,
     signOptions : {expiresIn : '7d'}
