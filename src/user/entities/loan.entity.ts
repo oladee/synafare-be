@@ -21,6 +21,12 @@ export class Loan{
     downpayment_in_naira : number
 
     @Prop()
+    loan_amount : number
+
+    @Prop()
+    total_repayment : number
+
+    @Prop()
     bank_statement : string
 
     @Prop()
@@ -34,5 +40,17 @@ export class Loan{
 
     @Prop({type :  mongoose.Schema.Types.ObjectId, ref : "User"})
     user : User;
+}
+
+@Schema({})
+export class RepaymentHistory {
+    @Prop({type : mongoose.Schema.Types.ObjectId,ref : "Loan"})
+    loan : Loan
+
+    @Prop()
+    repayment_date : Date
+
+
+
 }
 export const LoanSchema = SchemaFactory.createForClass(Loan)

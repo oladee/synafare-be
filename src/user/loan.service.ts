@@ -1,9 +1,7 @@
 import { BadRequestException, HttpException, Inject, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Customer } from "./entities/customer.entity";
 import { Model, Types } from "mongoose";
 import { Request } from "express";
-import { AddCustomerDto } from "./dto/add-customer.dto";
 import { Loan } from "./entities/loan.entity";
 import * as fs from "fs"
 import { AddLoanDto } from "./dto/add-loan.dto";
@@ -18,7 +16,7 @@ export class LoanService {
 
 
     async getLoans({id,type,page,limit,req}:{id ?:string,type ?:string, page : number, limit : number, req : Request}){
-        const user = req.user
+      const user = req.user
       try {
         const skip = (page - 1) * limit;
         const query: any = {};
@@ -84,6 +82,10 @@ export class LoanService {
         const expected = (loanData.transaction_cost * loanData.downpayment_in_percent).toFixed(2)
         const actual = loanData.downpayment_in_naira.toFixed(2)
 
+        if(loanData.transaction_cost <= loanData.downpayment_in_naira){
+          throw new BadRequestException("Transaction cost can not be lower then downpayment")
+        }
+
         if(expected != actual) throw new BadRequestException("Downpayment does not tally with payment percentage")
 
         if (files?.trx_invoice) {
@@ -101,8 +103,14 @@ export class LoanService {
           fs.unlinkSync(files.bank.path); // delete local file
           loanData.bank_statement = bankUpload.secure_url; 
         }
+
+        const loan_amount = (loanData.transaction_cost - loanData.downpayment_in_naira).toFixed(2)
+
+        const loan_interest = ((Number(loan_amount) * 0.06) * 3).toFixed(2)
+
+        const total_repayment = Number(loan_amount + loan_interest).toFixed(2)
   
-        await this.loanModel.create( {...loanData,user : id});
+        await this.loanModel.create( {...loanData,loan_amount, total_repayment, user : id});
         return {
           message: 'Loan Application Submitted Successfully',
         };
