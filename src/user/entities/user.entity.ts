@@ -47,6 +47,9 @@ export class User {
 
   @Prop({default : "not_submitted", enum : ["submitted","not_submitted"]})
   business_document : string
+
+  @Prop({default : "not_signed", enum : ["signed","not_signed"]})
+  loan_agreement : string
 }
 
 export type UserDocument = HydratedDocument<User>;

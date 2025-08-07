@@ -138,4 +138,13 @@ export class UserService {
       throw new HttpException(error.message || 'Failed to fetch businesses', error.status || 500);
     }
   }
+
+  async findOneBusiness (param : object){
+    try {
+      const result = await this.businessModel.findOne(param)
+      return result
+    } catch (error) {
+      throw new BadRequestException("An error occurred while fetching business details")
+    }
+  }
 }

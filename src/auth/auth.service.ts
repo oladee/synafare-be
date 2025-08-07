@@ -1,4 +1,4 @@
-import { ArgumentMetadata, ForbiddenException, HttpException, Inject, Injectable, PipeTransform, UnauthorizedException } from '@nestjs/common';
+import { ArgumentMetadata, BadRequestException, ForbiddenException, HttpException, Inject, Injectable, PipeTransform, UnauthorizedException } from '@nestjs/common';
 // import * as admin from 'firebase-admin';
 import { UserService } from '../user/user.service';
 import { ConfigService } from '@nestjs/config';
@@ -89,10 +89,20 @@ export class AuthService {
     const { id } = req.user;
     try {
       // confirm id_type and id_number
-      await Promise.all([
+      const [_,_i,details_exist]=await Promise.all([
         this.idlookupservice.lookupDocuments({doctype : setupData.id_type, doc_number : String(setupData.id_number)}),
-        this.idlookupservice.lookupDocuments({doctype : "bvn", doc_number : String(setupData.bvn)})
+        this.idlookupservice.lookupDocuments({doctype : "bvn", doc_number : String(setupData.bvn)}),
+        this.userService.findUsersWithOptions({$or : [
+          {bvn : setupData.bvn},
+          {$and : [
+            {id_type : setupData.id_type},
+            {id_number : setupData.id_number}
+          ]}
+        ]})
       ])
+      if(details_exist){
+        throw new BadRequestException("One or more of your input already exist on the platform")
+      }
 
       await this.userService.findUserAndUpdate({_id : id},{...setupData})
       return {message : "Account setup successful"}
@@ -112,6 +122,13 @@ export class AuthService {
       const { id } = req.user;
 
       await this.idlookupservice.lookupDocuments({doctype : "cac", doc_number : businessData.reg_number,company_name : businessData.business_name})
+
+
+      const reg_exist = await this.userService.findOneBusiness({reg_number : businessData.reg_number})
+
+      if(reg_exist){
+        throw new BadRequestException("Business Already Exist")
+      }
 
       if (files?.cac) {
         cacUpload = await this.cloudinary.uploader.upload(files.cac.path, {
