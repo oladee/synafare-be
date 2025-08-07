@@ -48,7 +48,7 @@ export class User {
   @Prop({default : "not_submitted", enum : ["submitted","not_submitted"]})
   business_document : string
 
-  @Prop({default : "not_signed", enum : ["signed","not_signed"]})
+  @Prop({default : "not_signed", enum : ["signed","not_signed","declined"]})
   loan_agreement : string
 }
 

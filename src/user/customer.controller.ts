@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Query, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from "@nestjs/common";
 import { CustomerService } from "./customer.service";
 import { FirebaseAuthGuard } from "src/auth/auth.guard";
 import { Request } from "express";
@@ -11,7 +11,7 @@ export class CustomerController {
     constructor(private readonly customerService: CustomerService) {}
 
     @UseGuards(FirebaseAuthGuard)
-    @Get()
+    @Get('getcustomers')
     getcustomers(@Req() req : Request, @Query('id') filter?: string,
         @Query('page') page = 1,
         @Query('limit') limit = 10){
@@ -20,14 +20,14 @@ export class CustomerController {
 
 
     @UseGuards(FirebaseAuthGuard)
-    @Patch('add')
+    @Post('add')
     addcustomer(@Req() req : Request, @Body() data : AddCustomerDto){
         return this.customerService.addCustomer(req,data)
     }
 
     @UseGuards(FirebaseAuthGuard)
-    @Delete('delete')
-    deletecustomer(@Req() req : Request, @Body() cus_id : string){
+    @Delete('delete/:id')
+    deletecustomer(@Req() req : Request, @Param('id') cus_id : string){
         return this.customerService.deleteCustomer(req,cus_id)
     }
 

@@ -1,16 +1,20 @@
-import { BadRequestException, HttpException, Injectable } from "@nestjs/common";
+import { BadRequestException, HttpException, Inject, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Customer } from "./entities/customer.entity";
 import { Model, Types } from "mongoose";
 import { Request } from "express";
 import { AddCustomerDto } from "./dto/add-customer.dto";
 import { Loan } from "./entities/loan.entity";
+import * as fs from "fs"
+import { AddLoanDto } from "./dto/add-loan.dto";
+import {v2 as Cloudinary, UploadApiResponse} from 'cloudinary'
+import { UserService } from "./user.service";
 
 
 
 @Injectable()
 export class LoanService {
-  constructor(@InjectModel(Loan.name) private loanModel: Model<Loan>) {}
+  constructor(@InjectModel(Loan.name) private loanModel: Model<Loan>,@Inject('CLOUDINARY') private readonly cloudinary: typeof Cloudinary, private readonly userService : UserService) {}
 
 
     async getLoans({id,type,page,limit,req}:{id ?:string,type ?:string, page : number, limit : number, req : Request}){
@@ -23,17 +27,22 @@ export class LoanService {
           query._id = id; 
         }
         if(type){
-            query.loan_status = type
+          query.loan_status = type
         }
-        query.user = id
+        query.user = user.id
   
-        const [users, total] = await Promise.all([
-          this.loanModel.find(query).skip(skip).limit(limit),
+        const [loans, total] = await Promise.all([
+          this.loanModel.find(query)
+          .populate('customer')
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
           this.loanModel.countDocuments(query),
         ]);
   
         return {
-          data: users,
+          data: loans,
           meta: {
             total,
             page,
@@ -43,6 +52,81 @@ export class LoanService {
         };
       } catch (error) {
         throw new HttpException(error.message || 'Failed to fetch loans', error.status || 421);
+      }
+    }
+
+    async loanAgreement(req : Request, action: "signed"|"not_signed"|"declined"){
+      const user = req.user
+      let result;
+      try {
+        const allowedActions = ["signed","not_signed","declined"]
+        console.log(action)
+        if(!allowedActions.includes(action)){
+          throw new BadRequestException("Action not allowed")
+        }
+
+        if(user.loan_agreement != "signed"){
+          result = await this.userService.findUserAndUpdate({_id : user.id},{loan_agreement : action})
+        }
+        return {message : "Agreement already signed previously", result}
+      } catch (error) {
+        throw new BadRequestException(error.message || "An error occurred while signing agreemenr")
+      }
+    }
+
+    async addLoan(loanData: AddLoanDto, files :{ trx_invoice: Express.Multer.File; bank: Express.Multer.File }, req: Request) {
+      let trx_invoiceUpload: UploadApiResponse | undefined;
+  
+      let bankUpload: UploadApiResponse | undefined;
+  
+      try {
+        const { id } = req.user;
+        const expected = (loanData.transaction_cost * loanData.downpayment_in_percent).toFixed(2)
+        const actual = loanData.downpayment_in_naira.toFixed(2)
+
+        if(expected != actual) throw new BadRequestException("Downpayment does not tally with payment percentage")
+
+        if (files?.trx_invoice) {
+          trx_invoiceUpload = await this.cloudinary.uploader.upload(files.trx_invoice.path, {
+            folder: 'trx_invoice',
+          });
+          fs.unlinkSync(files.trx_invoice.path); // delete local file
+          loanData.trx_invoice = trx_invoiceUpload.secure_url; // store the URL
+        }
+  
+        if (files.bank) {
+          bankUpload = await this.cloudinary.uploader.upload(files.bank.path, {
+            folder: 'bank_statements',
+          });
+          fs.unlinkSync(files.bank.path); // delete local file
+          loanData.bank_statement = bankUpload.secure_url; 
+        }
+  
+        await this.loanModel.create( {...loanData,user : id});
+        return {
+          message: 'Loan Application Submitted Successfully',
+        };
+  
+      } catch (error) {
+        if (trx_invoiceUpload?.public_id) {
+          await this.cloudinary.uploader.destroy(trx_invoiceUpload.public_id);
+        }
+        if (bankUpload?.public_id) {
+          await this.cloudinary.uploader.destroy(bankUpload.public_id);
+        }
+  
+        // Delete local files if still present
+        if (files?.trx_invoice && fs.existsSync(files.trx_invoice.path)) {
+          fs.unlinkSync(files.trx_invoice.path);
+        }
+        if (files?.bank && fs.existsSync(files.bank.path)) {
+          fs.unlinkSync(files.bank.path);
+        }
+  
+        throw new HttpException(
+          error.message ||'An error occurred while setting up your account',
+          error.status || 400
+        );
       }
     }
 

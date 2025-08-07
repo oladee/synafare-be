@@ -6,6 +6,7 @@ import { AddCustomerDto } from "./dto/add-customer.dto";
 import { LoanService } from "./loan.service";
 import { FileSizeValidationPipe } from "src/auth/auth.service";
 import { FileFieldsInterceptor } from "@nestjs/platform-express";
+import { AddLoanDto } from "./dto/add-loan.dto";
 
 
 
@@ -14,60 +15,55 @@ export class LoanController {
     constructor(private readonly loanService: LoanService) {}
 
     @UseGuards(FirebaseAuthGuard)
-    @Get()
+    @Get('myloans')
     getLoans(@Req() req : Request, @Query('id') id?: string,@Query('type') type?:"active" | "completed" | "pending",
-        @Query('page') page = 1,
-        @Query('limit') limit = 10){
-            return this.loanService.getLoans({id, page, limit,req})
+      @Query('page') page = 1,
+      @Query('limit') limit = 10){
+        return this.loanService.getLoans({id, page, limit,req})
+    }
+
+    @UseGuards(FirebaseAuthGuard)
+    @Post("agreement")
+    loanAgreement(@Req() req : Request, @Body() data : {action : "signed" | "not_signed" | "declined"} ){
+      return this.loanService.loanAgreement(req,data.action)
     }
 
 
     @HttpCode(HttpStatus.OK)
-      @Post('business-setup')
-      @UseGuards(FirebaseAuthGuard)
-      @UseInterceptors(
-        FileFieldsInterceptor(
-          [
-            { name: 'trx_invoice', maxCount: 1 },
-            { name: 'bank_statement', maxCount: 1 },
-          ],
-          {
-            dest: 'uploads/',
-            fileFilter: (req, file, cb) => {
-            const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-            if (!allowedTypes.includes(file.mimetype)) {
-              return cb(new BadRequestException('Invalid file type.'), false);
-            }
-            cb(null, true);
-          },
-          },
-      ),)
-      businessSetup(@Body() @Req() request:Request, @UploadedFiles(new FileSizeValidationPipe()) files : {
-          cac_certificate: Express.Multer.File[];
-          bank_statement: Express.Multer.File[];
-        }){
-        if (!files?.cac_certificate?.length || !files?.bank_statement?.length) {
-          throw new BadRequestException('cac_certificate and bank_statement are required.');
-        }
-        const uploadFiles = {
-          cac: files.cac_certificate[0],
-          bank: files.bank_statement[0],
-        };
-        return
+    @Post('apply')
+    @UseGuards(FirebaseAuthGuard)
+    @UseInterceptors(
+      FileFieldsInterceptor(
+        [
+          { name: 'trx_invoice', maxCount: 1 },
+          { name: 'bank_statement', maxCount: 1 },
+        ],
+        {
+          dest: 'uploads/',
+          fileFilter: (req, file, cb) => {
+          const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+          if (!allowedTypes.includes(file.mimetype)) {
+            return cb(new BadRequestException('Invalid file type.'), false);
+          }
+          cb(null, true);
+        },
+        },
+    ),)
+    addLoan(@Body() loanData : AddLoanDto, @Req() request:Request, @UploadedFiles(new FileSizeValidationPipe()) files : {
+        trx_invoice: Express.Multer.File[];
+        bank_statement: Express.Multer.File[];
+    }){
+      if (!files?.trx_invoice?.length || !files?.bank_statement?.length) {
+        throw new BadRequestException('trx_invoice and bank_statement are required.');
+      }
+      const uploadFiles = {
+        trx_invoice: files.trx_invoice[0],
+        bank: files.bank_statement[0],
+      };
+      return this.loanService.addLoan(loanData,uploadFiles,request)
     }
 
 
-    // @UseGuards(FirebaseAuthGuard)
-    // @Patch('add')
-    // addcustomer(@Req() req : Request, @Body() data : AddCustomerDto){
-    //     return this.customerService.addCustomer(req,data)
-    // }
-
-    // @UseGuards(FirebaseAuthGuard)
-    // @Delete('delete')
-    // deletecustomer(@Req() req : Request, @Body() cus_id : string){
-    //     return this.customerService.deleteCustomer(req,cus_id)
-    // }
 
 
 }

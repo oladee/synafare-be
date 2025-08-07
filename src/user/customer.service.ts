@@ -45,28 +45,35 @@ export class CustomerService {
     async addCustomer(req : Request, data : AddCustomerDto){
         const {id} =req.user
         try {
-            const cus_exist =  await this.customerModel.findOne({customer_email : data.customer_email})
+            const cus_exist =  await this.customerModel.findOne({
+              $or : [
+                {customer_email : data.customer_email},
+                {customer_phn : data.customer_phn}
+              ]
+              })
             if(cus_exist){
-                throw new BadRequestException("Customer already exist on the platform")
+              throw new BadRequestException("Customer already exist on the platform")
             }
-            await this.customerModel.create({...AddCustomerDto, user : id})
-            return{message : "Customer created successfully"}
+            const cus_details = await this.customerModel.create({...data, user : id})
+            return{message : "Customer created successfully",cus_details}
         } catch (error) {
-            throw new BadRequestException("An error occurred while adding customer details")
+          console.log(error)
+            throw new BadRequestException(error.message || "An error occurred while adding customer details")
         }
     }
 
     async deleteCustomer(req : Request, cus_id : string){
         const {id} =req.user
         try {
-            const cus_exist =  await this.customerModel.findOne({id : cus_id, user : id})
+            const cus_exist =  await this.customerModel.findOne({_id : cus_id, user : id})
             if(!cus_exist){
                 throw new BadRequestException("Customer not found")
             }
-            await this.customerModel.findOneAndDelete({id : cus_id, user : id})
-            return{message : "Customer deleted successfully"}
+            const cus_details = await this.customerModel.findOneAndDelete({_id : cus_id, user : id})
+            return{message : "Customer deleted successfully",cus_details}
         } catch (error) {
-            throw new BadRequestException("An error occurred while adding customer details")
+          console.log(error)
+            throw new BadRequestException(error.message || "An error occurred while adding customer details")
         }
     }
 }

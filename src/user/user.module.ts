@@ -8,6 +8,9 @@ import { Customer, CustomerSchema } from './entities/customer.entity';
 import { CustomerService } from './customer.service';
 import { Loan, LoanSchema } from './entities/loan.entity';
 import { CustomerController } from './customer.controller';
+import { LoanController } from './loan.controller';
+import { LoanService } from './loan.service';
+import { CloudinaryConfig } from 'src/config/cloudinary.config';
 
 @Module({
   imports : [
@@ -16,8 +19,8 @@ import { CustomerController } from './customer.controller';
       schema : UserSchema
     },{name : Business_Information.name, schema : BusinessInformationSchema},{name : Customer.name, schema : CustomerSchema},{name : Loan.name, schema : LoanSchema}]),FirebaseModule
   ],
-  controllers: [UserController,CustomerController],
-  providers: [UserService,CustomerService],
+  controllers: [UserController,CustomerController,LoanController,],
+  providers: [UserService,CustomerService,LoanService,CloudinaryConfig],
   exports : [UserService]
 })
 export class UserModule {}
