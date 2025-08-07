@@ -23,6 +23,9 @@ export class Loan{
     @Prop()
     loan_amount : number
 
+    @Prop({default : 0.06})
+    interest : number
+
     @Prop()
     total_repayment : number
 
