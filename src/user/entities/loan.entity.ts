@@ -11,6 +11,9 @@ export class Loan{
     @Prop()
     transaction_cost : number
 
+    @Prop()
+    paid_duration : number
+
     @Prop({min : 3, max : 6})
     loan_duration_in_months : number
 
@@ -25,6 +28,9 @@ export class Loan{
 
     @Prop({default : 0.06})
     interest : number
+
+    @Prop()
+    outstanding_bal : number
 
     @Prop()
     total_repayment : number
@@ -53,7 +59,11 @@ export class RepaymentHistory {
     @Prop()
     repayment_date : Date
 
+    @Prop()
+    amount : number
 
+    @Prop({default : false})
+    is_paid : boolean
 
 }
 export const LoanSchema = SchemaFactory.createForClass(Loan)
