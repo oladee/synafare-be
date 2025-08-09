@@ -100,7 +100,6 @@ export class AuthService {
           ]}
         ]})
       ])
-      console.log(details_exist)
       if(details_exist.length > 0){
         throw new BadRequestException("One or more of your input already exist on the platform")
       }
