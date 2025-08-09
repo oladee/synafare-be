@@ -13,7 +13,7 @@ export class Customer {
     @Prop({unique : true, required : true})
     customer_phn : string
     
-    @Prop({default : new Date()})
+    @Prop({ default: () => new Date() })
     date_joined : Date;
 
     @Prop({type : mongoose.Schema.Types.ObjectId, ref : "User"})

@@ -108,8 +108,8 @@ export class LoanService {
 
         const loan_interest = ((Number(loan_amount) * 0.06) * 3).toFixed(2)
 
-        const total_repayment = Number(loan_amount + loan_interest).toFixed(2)
-  
+        const total_repayment = (Number(loan_amount) + Number(loan_interest)).toFixed(2)
+
         await this.loanModel.create( {...loanData,loan_amount, total_repayment, user : id});
         return {
           message: 'Loan Application Submitted Successfully',
