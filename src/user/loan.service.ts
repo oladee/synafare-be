@@ -137,32 +137,4 @@ export class LoanService {
         );
       }
     }
-
-    // async addCustomer(req : Request, data : AddCustomerDto){
-    //     const {id} =req.user
-    //     try {
-    //         const cus_exist =  await this.customerModel.findOne({customer_email : data.customer_email})
-    //         if(cus_exist){
-    //             throw new BadRequestException("Customer already exist on the platform")
-    //         }
-    //         await this.customerModel.create({...AddCustomerDto, user : id})
-    //         return{message : "Customer created successfully"}
-    //     } catch (error) {
-    //         throw new BadRequestException("An error occurred while adding customer details")
-    //     }
-    // }
-
-    // async deleteCustomer(req : Request, cus_id : string){
-    //     const {id} =req.user
-    //     try {
-    //         const cus_exist =  await this.customerModel.findOne({id : cus_id, user : id})
-    //         if(!cus_exist){
-    //             throw new BadRequestException("Customer not found")
-    //         }
-    //         await this.customerModel.findOneAndDelete({id : cus_id, user : id})
-    //         return{message : "Customer deleted successfully"}
-    //     } catch (error) {
-    //         throw new BadRequestException("An error occurred while adding customer details")
-    //     }
-    // }
 }
