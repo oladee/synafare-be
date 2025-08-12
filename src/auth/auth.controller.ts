@@ -1,10 +1,10 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Get,Req, Res, UseGuards, UseInterceptors, UploadedFile, UploadedFiles, BadRequestException } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, Get,Req, Res, UseGuards, UseInterceptors, UploadedFile, UploadedFiles, BadRequestException, Patch, Param } from '@nestjs/common';
 import { AuthService, FileSizeValidationPipe } from './auth.service';
 import { loginDto } from './dto/login.dto';
 import { Request, Response } from 'express';
 import { FirebaseAuthGuard } from './auth.guard';
-import { accSetupDto, BusinessSetupDto } from './dto/acc-setup.dto';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { accSetupDto, BusinessSetupDto, UpdateAccUserDto, UpdateBusinessDto } from './dto/acc-setup.dto';
+import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import {Express} from "express"
 
 @Controller('auth')
@@ -24,10 +24,24 @@ export class AuthController {
     return {message : "Logged Out"}
   }
 
+
   @UseGuards(FirebaseAuthGuard)
   @Post('setup')
   async accSetup(@Body() setupdata : accSetupDto, @Req() req: Request){
     return this.authService.accountSetup(setupdata,req)
+  }
+
+  @UseGuards(FirebaseAuthGuard)
+  @Patch('setup')
+   @UseInterceptors(FileInterceptor('avatar',{dest : "/uploads",fileFilter: (req, file, cb) => {
+        const allowedTypes = ['image/jpeg', 'image/png'];
+        if (!allowedTypes.includes(file.mimetype)) {
+          return cb(new BadRequestException('Invalid file type.'), false);
+        }
+        cb(null, true);
+      },}))
+  async editAcc(@Body() dto : UpdateAccUserDto, @Req() req: Request,@UploadedFile(new FileSizeValidationPipe()) file: Express.Multer.File){
+    return this.authService.editAccount(dto,req,file)
   }
 
   @HttpCode(HttpStatus.OK)
@@ -62,6 +76,22 @@ export class AuthController {
       bank: files.bank_statement[0],
     };
     return this.authService.businessSetup(businessData,uploadFiles,request)
+  }
+
+  @UseGuards(FirebaseAuthGuard)
+  @Patch('edit-business/:id')
+   @UseInterceptors(FileInterceptor('avatar',{dest : "/uploads",fileFilter: (req, file, cb) => {
+        const allowedTypes = ['image/jpeg', 'image/png'];
+        if (!allowedTypes.includes(file.mimetype)) {
+          return cb(new BadRequestException('Invalid file type.'), false);
+        }
+        cb(null, true);
+      },}))
+  async editBusiness(@Body() dto : UpdateBusinessDto, @Req() req: Request,@UploadedFile(new FileSizeValidationPipe()) file: Express.Multer.File,@Param('id') id: string){
+    if (!id) {
+      throw new BadRequestException('Business ID is required.');
+    }
+    return this.authService.editBusiness(dto,req,file,id)
   }
 
   @UseGuards(FirebaseAuthGuard)

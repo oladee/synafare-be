@@ -8,15 +8,12 @@ export class IdlookupService {
   readonly da_config: object ;
 
   constructor(private readonly configService: ConfigService) {
-    const isDev = this.configService.get<string>('NODE_ENV') === 'dev';
-    this.da_base_url =  isDev ? String(this.configService.get<string>('DOJA_BASE_TEST')) : String(this.configService.get<string>('DOJA_BASE_PROD'))
+    this.da_base_url =  String(this.configService.get<string>('DOJA_BASE_PROD'))
 
     this.da_config = {
       headers: {
         Authorization: `${
-          isDev
-            ? this.configService.get<string>('DOJA_SK_TEST')
-            : this.configService.get<string>('DOJA_SK_PROD')
+        this.configService.get<string>('DOJA_SK_PROD')
         }`,
         AppId : this.configService.get<string>('DOJA_APP_ID')
       },

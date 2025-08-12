@@ -9,6 +9,8 @@ import { MailModule } from './mail/mail.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { IdlookupModule } from './utils/idlookup/idlookup.module';
+import { PaymentModule } from './payment/payment.module';
+import { WebhookModule } from './webhook/webhook.module';
 
 @Module({
   imports: [ConfigModule.forRoot({
@@ -21,6 +23,6 @@ import { IdlookupModule } from './utils/idlookup/idlookup.module';
     inject :[ConfigService]
   }),UserModule, FirebaseModule, AuthModule, OtpModule, MailModule,ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'), // Path to your static assets
-    }),IdlookupModule],
+    }),IdlookupModule, PaymentModule, WebhookModule],
 })
 export class AppModule {}

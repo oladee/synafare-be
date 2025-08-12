@@ -50,6 +50,15 @@ export class User {
 
   @Prop({default : "not_signed", enum : ["signed","not_signed","declined"]})
   loan_agreement : string
+
+  @Prop({default : 0})
+  wallet_balance : number;
+
+  @Prop({default : 0})
+  loan_balance : number;
+
+  @Prop({default : 0})
+  available_credit : number;
 }
 
 export type UserDocument = HydratedDocument<User>;
@@ -79,6 +88,9 @@ export class Business_Information {
 
   @Prop()
   country : string
+
+  @Prop()
+  business_logo : string
 
   @Prop({type : mongoose.Schema.Types.ObjectId, ref : 'User', unique : true})
   user : User

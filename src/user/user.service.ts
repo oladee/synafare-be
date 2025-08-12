@@ -111,6 +111,16 @@ export class UserService {
     }
   }
 
+  async findBusinessAndUpdate(searchParam : object, update : object){
+    try {
+      const businessDetails = await this.businessModel.findOneAndUpdate(searchParam,update,{new : true})
+      return businessDetails
+    } catch (error) {
+      console.log(error)
+      throw new HttpException('AN error occurred while fetching data',400)
+    }
+  }
+
   async findBusinesses({filter,page,limit}:{filter ?:string, page : number, limit : number}){
     try {
       const skip = (page - 1) * limit;

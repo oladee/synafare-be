@@ -1,3 +1,4 @@
+import { PartialType } from "@nestjs/mapped-types";
 import { IsEnum, IsOptional, IsString } from "class-validator";
 import { Types } from "mongoose";
 
@@ -70,4 +71,45 @@ export class BusinessSetupDto {
     @IsString()
     @IsOptional()
     bank_statement ?: string
+}
+
+export class UpdateAccUserDto {
+    @IsOptional()
+    @IsString()
+    first_name?: string;
+
+    @IsOptional()
+    @IsString()
+    last_name?: string;
+
+    @IsOptional()
+    @IsString()
+    phn_no?: string;
+
+    @IsOptional()
+    @IsString()
+    avatar?: string;
+}
+
+
+export class UpdateBusinessDto {
+    @IsOptional()
+    @IsString()
+    business_address ?: string
+
+    @IsOptional()
+    @IsString()
+    city ?: string
+
+    @IsOptional()
+    @IsString()
+    state ?: string
+
+    @IsOptional()
+    @IsString()
+    country ?: string
+
+    @IsString()
+    @IsOptional()
+    business_logo ?: string;
 }

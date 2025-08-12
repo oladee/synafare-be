@@ -6,7 +6,7 @@ import { FirebaseService } from 'src/utils/firebase/firebase.service';
 import { loginDto } from './dto/login.dto';
 import { Request, Response } from 'express';
 import { OtpService } from 'src/otp/otp.service';
-import { accSetupDto, BusinessSetupDto } from './dto/acc-setup.dto';
+import { accSetupDto, BusinessSetupDto, UpdateAccUserDto, UpdateBusinessDto } from './dto/acc-setup.dto';
 import { IdlookupService } from 'src/utils/idlookup/idlookup.service';
 import {v2 as Cloudinary, UploadApiResponse} from 'cloudinary'
 import * as fs from "fs"
@@ -111,6 +111,46 @@ export class AuthService {
       throw new HttpException(error.message || "An error occurred while setting up account", error.status || 400)
     }
 
+  }
+
+  async editAccount(updateDto : UpdateAccUserDto, req: Request, file : Express.Multer.File) {
+    const { id } = req.user;
+    try {
+      if(file){
+        const dp = await this.cloudinary.uploader.upload(file.path, {
+          folder: 'profile_pictures',
+        });
+        fs.unlinkSync(file.path);
+        updateDto.avatar = dp.secure_url; 
+      }
+      await this.userService.findUserAndUpdate({_id: id}, {...updateDto});
+      return {message: "Account updated successfully"};
+    } catch (error) {
+      console.log(error);
+      throw new HttpException(error.message || "An error occurred while updating account", error.status || 400);
+    }
+  }
+
+  async editBusiness(updateDto : UpdateBusinessDto, req: Request, file : Express.Multer.File,businessId: string) {
+    const { id } = req.user;
+    try {
+      const businessData = await this.userService.findOneBusiness({_id: businessId, user: id});
+      if (!businessData) {
+        throw new BadRequestException('Business not found');
+      }
+      if(file){
+        const logo = await this.cloudinary.uploader.upload(file.path, {
+          folder: 'business_logos',
+        });
+        fs.unlinkSync(file.path);
+        updateDto.business_logo = logo.secure_url; 
+      }
+      await this.userService.findBusinessAndUpdate({_id: id}, {...updateDto});
+      return {message: "Business info updated successfully"};
+    } catch (error) {
+      console.log(error);
+      throw new HttpException(error.message || "An error occurred while updating account", error.status || 400);
+    }
   }
 
   async businessSetup(businessData: BusinessSetupDto, files :{ cac: Express.Multer.File; bank: Express.Multer.File }, req: Request) {
