@@ -10,36 +10,48 @@ dotenv.config();
 @Injectable()
 export class WebhookService {
     constructor(private readonly trxService : TransactionService,private readonly userService : UserService) {}
-//     {
+// {
 //   event_type: 'payment_success',
-//   requestId: 'dde74d17-8797-47d2-8114-b14cabb35571',  
+//   requestId: '6201ad63-eeb2-4287-abd5-406584f38163',
 //   data: {
 //     merchant: {
 //       walletId: '681db897241ff1f67d26bf76',
-//       walletBalance: 18685684.29,
-//       userId: '225b9726-6767-42a3-bcad-2b041ddeb101'  
+//       walletBalance: 19000820.89,
+//       userId: '225b9726-6767-42a3-bcad-2b041ddeb101'
 //     },
 //     terminal: {},
-//     transaction: {
-//       aliasAccountNumber: '4570061478',
-//       fee: 10,
-//       sessionId: '000004250812181749687016677173',    
-//       type: 'vact_transfer',
-//       transactionId: 'API-VACT_TRA-225B9-32a38a56-e02b-4280-a3df-6b1406a4bce1',
-//       aliasAccountName: 'Synafare/devdee tunes',      
-//       responseCode: '',
-//       originatingFrom: 'api',
-//       transactionAmount: 50,
-//       narration: 'MOB/UTO/Synafare/devde/test funds/32321316306',
-//       time: '2025-08-12T17:17:53Z',
-//       aliasAccountReference: '689094006c72e191c7907c89',
-//       aliasAccountType: 'VIRTUAL'
+//     tokenizedCardData: {
+//       tokenKey: 'N/A',
+//       cardType: 'N/A',
+//       tokenExpiryYear: 'N/A',
+//       tokenExpiryMonth: 'N/A',
+//       cardPan: 'N/A'
 //     },
-//     customer: {
-//       bankCode: '033',
-//       senderName: 'MOMOH OLADEMIJI OLABISI',
-//       bankName: 'United Bank for Africa',
-//       accountNumber: '2139831364'
+//     transaction: {
+//       fee: 1.4,
+//       type: 'online_checkout',
+//       transactionId: 'WEB-ONLINE_C-225B9-bfeecaba-9309-40ed-af6b-57196c712029',
+//       responseCode: '',
+//       originatingFrom: 'web',
+//       merchantTxRef: '32329389916',
+//       transactionAmount: 100,
+//       time: '2025-08-13T09:00:11Z'
+//     },
+//     customer: { billerId: '2139831364', productId: '033' },
+//     order: {
+//       amount: 100,
+//       orderId: '04ce7dba-c6ba-46d7-b4e7-c153cbcdb395',
+//       cardType: 'N/A',
+//       accountId: '225b9726-6767-42a3-bcad-2b041ddeb101',
+//       cardLast4Digits: 'N/A',
+//       cardCurrency: 'N/A',
+//       customerEmail: 'deemajor230600@gmail.com',
+//       customerId: '2139831364',
+//       isTokenizedCardPayment: 'false',
+//       orderReference: 'ORD_9083817f-2aed-4206-96b2-abfbb5e76f86',
+//       paymentMethod: 'bank_transfer',
+//       callbackUrl: 'https://synafare-fe.vercel.app/dashboard',
+//       currency: 'NGN'
 //     }
 //   }
 // }
@@ -104,16 +116,26 @@ export class WebhookService {
 
             // handle payment_success
             if (payload.event_type === 'payment_success') {
-                if(payload.data.transaction.aliasAccountType == "VIRTUAL"){
+                if(payload.data.transaction.type == "vact_transfer"){
                     // Process the payment success event
                     const {data} = payload
                     const acc_ref = data.transaction.aliasAccountReference;
                     await this.userService.findUserAndUpdate({_id : acc_ref},{$inc : {wallet_balance : data.transaction.transactionAmount * 100}})
 
-                    await this.trxService.create({ user : acc_ref ,trx_amount : data.transaction.transactionAmount * 100, trx_type : "fund_wallet",ref_id : data.transaction.transactionId,trx_date : data.transaction.time,trx_id : `TRX_${uuid}`,trx_status : "success",})
+                    await this.trxService.create({ user : acc_ref ,trx_amount : data.transaction.transactionAmount * 100, trx_type : "fund_wallet",ref_id : data.transaction.transactionId,trx_date : data.transaction.time,trx_id : `TRX_${uuid}`,trx_status : "successful",})
 
                     console.log("Payment success event received:", payload);
                     // You can add your business logic here
+                }else if(payload.data.transaction.type == "online_checkout"){
+                    const {data} = payload
+                    const {order} = data
+
+                    const updatedDetails = await this.userService.findUserAndUpdate({email : order.customerEmail},{$inc : {wallet_balance : order.amount * 100}})
+
+                    if(updatedDetails){
+                        await this.trxService.create({ user : updatedDetails.id ,trx_amount : order.amount * 100, trx_type : "fund_wallet",ref_id : data.transaction.transactionId,trx_date : data.transaction.time,trx_id : `TRX_${uuid}`,trx_status : "successful",})
+                    }
+                   
                 }
             }
 
@@ -134,6 +156,7 @@ export class WebhookService {
             }
             return
         } catch (error) {
+            console.log(error)
             return
         }
     }

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { UserDocument } from 'src/user/entities/user.entity';
@@ -90,8 +90,7 @@ export class AccountService {
       return details.data.data;
       
     } catch (error) {
-      console.log(error)
-      throw new BadRequestException(error.response?.data?.message || 'Failed to query Nomba account');
+      throw new HttpException(error.response.data.message || "An error occurred while querying nomba account", error.status)
     }
   }
 
@@ -132,36 +131,43 @@ export class AccountService {
       if(!details){
         // query nomba for account details if the account already exists
 
-        const nomba_data = await this.queryNombaAccount(id);
+        try {
+          const nomba_data = await this.queryNombaAccount(id);
+          if(nomba_data ){
+            const acc = await this.accountModel.create({
+              user: id,
+              accountHolderId: nomba_data.accountHolderId,
+              accountName: nomba_data.accountName,
+              bankAccountNumber: nomba_data.bankAccountNumber,
+              bankAccountName: nomba_data.bankAccountName,
+              bankName: nomba_data.bankName,
+              accountRef: nomba_data.accountRef,
+              expiryDate:new Date(nomba_data.expiryDate)  
+            });
+            return {message : "retrieved account details successfully", data: acc};
+          }
+        } catch (error) {
+          if(error.status == 404){
+            // query nomba to create a new account if it does not exist
+            const new_details = await this.create(req.user);
+            const acc = await this.accountModel.create({
+              user: id,
+              accountHolderId: new_details.data.accountHolderId,
+              accountName: new_details.data.accountName,
+              bankAccountNumber: new_details.data.bankAccountNumber,
+              bankAccountName: new_details.data.bankAccountName,
+              bankName: new_details.data.bankName,
+              accountRef: new_details.data.accountRef,
+              expiryDate:new Date(new_details.data.expiryDate)  
+            });
 
-        if(nomba_data ){
-          const acc = await this.accountModel.create({
-            user: id,
-            accountHolderId: nomba_data.accountHolderId,
-            accountName: nomba_data.accountName,
-            bankAccountNumber: nomba_data.bankAccountNumber,
-            bankAccountName: nomba_data.bankAccountName,
-            bankName: nomba_data.bankName,
-            accountRef: nomba_data.accountRef,
-            expiryDate:new Date(nomba_data.expiryDate)  
-          });
-          return {message : "retrieved account details successfully", data: acc};
+            return {message : "retrieved account details successfully", data: acc};
+          }else{
+            console.log(error)
+            throw new BadRequestException("An error occured while fetching your account")
+          }
+          
         }
-
-
-        // query nomba to create a new account if it does not exist
-        const new_details = await this.create(req.user);
-        const acc = await this.accountModel.create({
-          user: id,
-          accountHolderId: new_details.data.accountHolderId,
-          accountName: new_details.data.accountName,
-          bankAccountNumber: new_details.data.bankAccountNumber,
-          bankAccountName: new_details.data.bankAccountName,
-          bankName: new_details.data.bankName,
-          accountRef: new_details.data.accountRef,
-          expiryDate:new Date(new_details.data.expiryDate)  
-        });
-        return {message : "retrieved account details successfully", data: acc};
       }
       if(details && daysUntilExpiry(details.expiryDate) < 7){
         await this.deleteNombaAccount(details.accountRef);
