@@ -21,3 +21,9 @@ export class ValidateBankDto {
     @IsString()
     accountNumber : string
 }
+
+export class CreatePaymentLinkDto {
+    @IsNumber()
+    @Min(100, {message : "Minimum payment link amount is 100 naira"})
+    amount : number;
+}

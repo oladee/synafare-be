@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Req, UseGuards } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { FirebaseAuthGuard } from 'src/auth/auth.guard';
-import { ValidateBankDto, WithdrawPaymentDto } from './dto/withdraw-payment.dto';
+import { CreatePaymentLinkDto, ValidateBankDto, WithdrawPaymentDto } from './dto/withdraw-payment.dto';
 import { Request } from 'express';
 
 @Controller('payment')
@@ -12,6 +12,13 @@ export class PaymentController {
   @Get('get-banks')
   getBanks(){
     return this.paymentService.listBanks()
+  }
+
+
+  @UseGuards(FirebaseAuthGuard)
+  @Get('get-payment-link')
+  getPaymentLink(@Body() data : CreatePaymentLinkDto, @Req() req : Request) {
+    return this.paymentService.getPaymentLink(data,req)
   }
 
   @UseGuards(FirebaseAuthGuard)

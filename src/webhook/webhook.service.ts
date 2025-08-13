@@ -100,17 +100,21 @@ export class WebhookService {
                 throw new BadRequestException('Invalid signature');
             }
 
+            console.log(payload)
+
             // handle payment_success
             if (payload.event_type === 'payment_success') {
-                // Process the payment success event
-                const {data} = payload
-                const acc_ref = data.transaction.aliasAccountReference;
-                await this.userService.findUserAndUpdate({_id : acc_ref},{$inc : {wallet_balance : data.transaction.transactionAmount * 100}})
+                if(payload.data.transaction.aliasAccountType == "VIRTUAL"){
+                    // Process the payment success event
+                    const {data} = payload
+                    const acc_ref = data.transaction.aliasAccountReference;
+                    await this.userService.findUserAndUpdate({_id : acc_ref},{$inc : {wallet_balance : data.transaction.transactionAmount * 100}})
 
-                await this.trxService.create({ user : acc_ref ,trx_amount : data.transaction.transactionAmount * 100, trx_type : "fund_wallet",ref_id : data.transaction.transactionId,trx_date : data.transaction.time,trx_id : `TRX_${uuid}`,trx_status : "success",})
+                    await this.trxService.create({ user : acc_ref ,trx_amount : data.transaction.transactionAmount * 100, trx_type : "fund_wallet",ref_id : data.transaction.transactionId,trx_date : data.transaction.time,trx_id : `TRX_${uuid}`,trx_status : "success",})
 
-                console.log("Payment success event received:", payload);
-                // You can add your business logic here
+                    console.log("Payment success event received:", payload);
+                    // You can add your business logic here
+                }
             }
 
             // handle payout_success
