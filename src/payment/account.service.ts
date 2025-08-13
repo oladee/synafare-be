@@ -1,6 +1,4 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { CreatePaymentDto } from './dto/create-payment.dto';
-import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { UserDocument } from 'src/user/entities/user.entity';
@@ -67,13 +65,91 @@ export class AccountService {
     }
   }
 
+  async queryNombaAccount(accountRef: string) {
+    try {
+      const credConfig = {
+        headers: {
+          'Content-Type': 'application/json',
+          accountId : this.account_id,
+        }
+      }
+
+      const {data} = await axios.post(`${this.nomba_base_url}/v1/auth/token/issue`,{grant_type: 'client_credentials',client_id : this.client_id, client_secret : this.client_secret}, credConfig)
+      const access_token = data.data.access_token;
+
+      const virtualConfig = {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${access_token}`,
+          accountId : this.account_id,
+        }
+      }
+
+      const details = await axios.get(`${this.nomba_base_url}/v1/accounts/virtual/${accountRef}`, virtualConfig);
+
+      return details.data.data;
+      
+    } catch (error) {
+      console.log(error)
+      throw new BadRequestException(error.response?.data?.message || 'Failed to query Nomba account');
+    }
+  }
+
+  async deleteNombaAccount(accountRef: string) {
+    try {
+      const credConfig = {
+        headers: {
+          'Content-Type': 'application/json',
+          accountId : this.account_id,
+        }
+      }
+
+      const {data} = await axios.post(`${this.nomba_base_url}/v1/auth/token/issue`,{grant_type: 'client_credentials',client_id : this.client_id, client_secret : this.client_secret}, credConfig)
+      const access_token = data.data.access_token;
+
+      const virtualConfig = {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${access_token}`,
+          accountId : this.account_id,
+        }
+      }
+
+      await axios.delete(`${this.nomba_base_url}/v1/accounts/virtual/${accountRef}`, virtualConfig);
+
+      return;
+      
+    } catch (error) {
+      console.log(error)
+      throw new BadRequestException(error.response?.data?.message || 'Failed to query Nomba account');
+    }
+  }
+
   async myAccountDetails(req:Request){
     const {id} = req.user
     try{
       const details = await this.accountModel.findOne({accountRef : id})
       if(!details){
-        const expiry = new Date();
-        expiry.setMonth(expiry.getMonth() + 5);
+        // query nomba for account details if the account already exists
+
+        const nomba_data = await this.queryNombaAccount(id);
+
+        if(nomba_data ){
+          const acc = await this.accountModel.create({
+            user: id,
+            accountHolderId: nomba_data.accountHolderId,
+            accountName: nomba_data.accountName,
+            bankAccountNumber: nomba_data.bankAccountNumber,
+            bankAccountName: nomba_data.bankAccountName,
+            bankName: nomba_data.bankName,
+            accountRef: nomba_data.accountRef,
+            expiryDate:new Date(nomba_data.expiryDate)  
+          });
+          return {message : "retrieved account details successfully", data: acc};
+        }
+
+
+        // query nomba to create a new account if it does not exist
         const new_details = await this.create(req.user);
         const acc = await this.accountModel.create({
           user: id,
@@ -88,6 +164,7 @@ export class AccountService {
         return {message : "retrieved account details successfully", data: acc};
       }
       if(details && daysUntilExpiry(details.expiryDate) < 7){
+        await this.deleteNombaAccount(details.accountRef);
         const new_details = await this.create(req.user);
         const expiry = new Date();
         expiry.setMonth(expiry.getMonth() + 5);
@@ -111,17 +188,5 @@ export class AccountService {
     }
   }
 
-  async simulatePayment() {
-    try {
-      const credConfig = {
-        headers: {
-          'Content-Type': 'application/json',
-          accountId : this.account_id,
-        }
-      }
-    } catch (error) {
-      
-    }
-  }
 
 }

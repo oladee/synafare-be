@@ -13,5 +13,11 @@ export class AccountController {
     return this.accountService.myAccountDetails(req);
   }
 
+  @UseGuards(FirebaseAuthGuard)
+  @Get('nomba-account')
+  nombaAccount(@Req() req: Request) {
+    return this.accountService.queryNombaAccount(req.user.id);
+  }
+
 
 }

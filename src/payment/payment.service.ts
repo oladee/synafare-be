@@ -1,26 +1,143 @@
-import { Injectable } from '@nestjs/common';
-import { CreatePaymentDto } from './dto/create-payment.dto';
-import { UpdatePaymentDto } from './dto/update-payment.dto';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { WithdrawPaymentDto } from './dto/withdraw-payment.dto';
+import { ConfigService } from '@nestjs/config';
+import { Request } from 'express';
+import axios from 'axios';
+import {v4 as uuidv4} from 'uuid'
+import { TransactionService } from './transaction.service';
 
 @Injectable()
 export class PaymentService {
-  create(createPaymentDto: CreatePaymentDto) {
-    return 'This action adds a new payment';
+  readonly nomba_base_url: string;
+  readonly client_secret: string ;
+  readonly client_id: string ;
+  readonly account_id : string
+
+  constructor( private readonly configService: ConfigService, private readonly trxService: TransactionService) {
+    this.nomba_base_url =  "https://api.nomba.com"
+    this.client_id = this.configService.get<string>('NOMBA_PROD_CLIENT_ID')!;
+    this.client_secret =  this.configService.get<string>('NOMBA_PROD_PRIVATE_KEY')!;
+
+    this.account_id =  this.configService.get<string>('NOMBA_PROD_ACCOUNT_ID')!;
+
   }
 
-  findAll() {
-    return `This action returns all payment`;
+  async withdrawFunds(dto: WithdrawPaymentDto, req : Request) {
+    const user = req.user
+    const uuid = uuidv4()
+    try {
+      if(dto.amount > user.wallet_balance){
+        throw new BadRequestException("Withdrawal amount exceceds current wallet balance")
+      }
+
+      const bankInfo = await this.validateBank({bankCode : dto.bank_code, accountNumber : dto.acc_no})
+
+      await this.parentTransfer({amount : dto.amount / 100, accountName : bankInfo.data.accountName, accountNumber : dto.acc_no, bankCode : dto.bank_code,merchantTxRef : uuid,narration : "Synafare web app withdrawal" ,senderName : "Synafare web app", meta : {userId : user.id}})
+
+    } catch (error) {
+      console.log(error)
+      throw new BadRequestException(error.message || "An error occurred while trying to process your withdrawal")
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} payment`;
+  async listBanks (){
+    try {
+      const credConfig = {
+        headers: {
+          'Content-Type': 'application/json',
+          accountId : this.account_id,
+        }
+      }
+
+      const {data} = await axios.post(`${this.nomba_base_url}/v1/auth/token/issue`,{grant_type: 'client_credentials',client_id : this.client_id, client_secret : this.client_secret}, credConfig)
+      const access_token = data.data.access_token;
+
+      const virtualConfig = {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${access_token}`,
+          accountId : this.account_id,
+        }
+      }
+
+      const details = await axios.get(`${this.nomba_base_url}/v1/transfers/banks/`, virtualConfig);
+
+      return details.data
+      
+    } catch (error) {
+      console.log(error)
+      throw new BadRequestException(error.message || "An error occurred while fetching available banks")
+    }
   }
 
-  update(id: number, updatePaymentDto: UpdatePaymentDto) {
-    return `This action updates a #${id} payment`;
+  async validateBank(bankdata : {bankCode : string, accountNumber : string}){
+    try {
+
+      const credConfig = {
+        headers: {
+          'Content-Type': 'application/json',
+          accountId : this.account_id,
+        }
+      }
+
+      const {data} = await axios.post(`${this.nomba_base_url}/v1/auth/token/issue`,{grant_type: 'client_credentials',client_id : this.client_id, client_secret : this.client_secret}, credConfig)
+      const access_token = data.data.access_token;
+
+      const virtualConfig = {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${access_token}`,
+          accountId : this.account_id,
+        }
+      }
+
+      const details = await axios.post(`${this.nomba_base_url}/v1/transfers/bank/lookup`,bankdata, virtualConfig);
+
+      return details.data
+      
+    } catch (error) {
+      console.log(error.response.data.description)
+      throw new BadRequestException(error.response.data.description || "An error occurred while validating bank")
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} payment`;
+  async parentTransfer(transferData:{amount : number, accountNumber : string, accountName : string, bankCode : string, merchantTxRef : string, senderName : string, narration : string,meta : {userId : string}}) {
+    try {
+
+      const credConfig = {
+        headers: {
+          'Content-Type': 'application/json',
+          accountId : this.account_id,
+        }
+      }
+
+      const {data} = await axios.post(`${this.nomba_base_url}/v1/auth/token/issue`,{grant_type: 'client_credentials',client_id : this.client_id, client_secret : this.client_secret}, credConfig)
+      const access_token = data.data.access_token;
+
+      const virtualConfig = {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${access_token}`,
+          accountId : this.account_id,
+        }
+      }
+
+      await this.trxService.create({
+        user: transferData.meta.userId,
+        trx_amount: transferData.amount * 100,
+        trx_type: "withdrawal",
+        ref_id: transferData.merchantTxRef,
+        trx_date: new Date(),
+        trx_id: `TRX_${uuidv4()}`,
+        trx_status: "pending",
+      })
+
+      const response = await axios.post(`${this.nomba_base_url}/v1/transfers/bank/`, transferData, virtualConfig);
+
+      return response.data
+    } catch (error) {
+      console.log(error)
+      throw new BadRequestException(error.response.data || "An error occurred while processing your request")
+    }
   }
 }

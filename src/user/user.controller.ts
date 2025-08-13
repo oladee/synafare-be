@@ -10,7 +10,6 @@ export class UserController {
   findAll(@Query('id') filter?: string,
     @Query('page') page = 1,
     @Query('limit') limit = 10) {
-      console.log('here')
     const sanitizedLimit = Math.min(Math.max(+limit || 10, 1), 100); // max 100 users per page
     const sanitizedPage = Math.max(+page || 1, 1);
     return this.userService.findAll({ filter, page: sanitizedPage, limit: sanitizedLimit });

@@ -1,34 +1,28 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req, UseGuards } from '@nestjs/common';
 import { PaymentService } from './payment.service';
-import { CreatePaymentDto } from './dto/create-payment.dto';
-import { UpdatePaymentDto } from './dto/update-payment.dto';
+import { FirebaseAuthGuard } from 'src/auth/auth.guard';
+import { ValidateBankDto, WithdrawPaymentDto } from './dto/withdraw-payment.dto';
+import { Request } from 'express';
 
 @Controller('payment')
 export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
-  @Post()
-  create(@Body() createPaymentDto: CreatePaymentDto) {
-    return this.paymentService.create(createPaymentDto);
+  @UseGuards(FirebaseAuthGuard)
+  @Get('get-banks')
+  getBanks(){
+    return this.paymentService.listBanks()
   }
 
-  @Get()
-  findAll() {
-    return this.paymentService.findAll();
+  @UseGuards(FirebaseAuthGuard)
+  @Post('validate-bank')
+  validateBank(@Body() data : ValidateBankDto){
+    return this.paymentService.validateBank(data)
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.paymentService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePaymentDto: UpdatePaymentDto) {
-    return this.paymentService.update(+id, updatePaymentDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.paymentService.remove(+id);
+  @UseGuards(FirebaseAuthGuard)
+  @Post('withdraw')
+  withdrawFunds(@Body() dto: WithdrawPaymentDto,@Req() req : Request) {
+    return this.paymentService.withdrawFunds(dto, req);
   }
 }

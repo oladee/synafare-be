@@ -18,10 +18,13 @@ export enum validTrxType {
 export class CreateTransactionDto {
 
     @IsString()
-    user_id : string;
+    user : string;
 
     @IsString()
     trx_id: string;
+
+    @IsString()
+    ref_id: string;
 
     @IsEnum(validTrxType)
     trx_type: string;
