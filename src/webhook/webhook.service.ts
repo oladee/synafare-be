@@ -95,6 +95,8 @@ export class WebhookService {
             const signature = req.get("nomba-sig-value");
             const uuid = uuidv4();
 
+            console.log(payload)
+
             // Construct hashing payload exactly as in Nomba docs
             const hashingPayload =
                 `${payload.event_type}:${payload.requestId}:${payload.data.merchant.userId}:${payload.data.merchant.walletId}:${payload.data.transaction.transactionId}:${payload.data.transaction.type}:${payload.data.transaction.time}:${payload.data.transaction.responseCode}`;
