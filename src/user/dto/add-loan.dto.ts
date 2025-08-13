@@ -1,10 +1,20 @@
 import { Transform } from "class-transformer"
-import { IsNumber, IsOptional, IsString, Max, Min } from "class-validator"
+import { IsEnum, IsNumber, IsOptional, IsString, Max, Min, ValidateIf } from "class-validator"
 import { Schema } from "mongoose"
 
+
+export enum ValidLoanTypes{
+    customer_loan = "customer_loan",
+    inventory_financing = "inventory_financing"
+}
 export class AddLoanDto{
+
+    @IsEnum(ValidLoanTypes)
+    loan_type : ValidLoanTypes
+
+    @ValidateIf((o)=>o.loan_type == ValidLoanTypes.customer_loan)
     @IsString()
-    customer : Schema.Types.ObjectId
+    customer ?: string
 
     @Transform(({ value }) => parseFloat(value))
     @IsNumber()
@@ -33,4 +43,22 @@ export class AddLoanDto{
     @IsString()
     @IsOptional()
     trx_invoice : string
+}
+
+export enum validAdminLoanActionType{
+    approved = "approved",
+    rejected = "rejected",
+    offer =  "offer"
+}
+export class AdminLoanActionDto {
+    @IsEnum(validAdminLoanActionType)
+    actionType : validAdminLoanActionType
+
+    @ValidateIf((o)=>o.actionType === validAdminLoanActionType.offer)
+    @IsNumber()
+    amountOffered : number
+
+    @ValidateIf((o)=>o.actionType === validAdminLoanActionType.rejected)
+    @IsString()
+    decline_reason : string
 }

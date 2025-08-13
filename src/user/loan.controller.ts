@@ -4,26 +4,24 @@ import { Request } from "express";
 import { LoanService } from "./loan.service";
 import { FileSizeValidationPipe } from "src/auth/auth.service";
 import { FileFieldsInterceptor } from "@nestjs/platform-express";
-import { AddLoanDto } from "./dto/add-loan.dto";
+import { AddLoanDto, AdminLoanActionDto } from "./dto/add-loan.dto";
 import { RequireKeys } from "src/auth/require-keys.decorator";
+import { Roles } from "src/auth/roles.decorator";
 
 
-
+@UseGuards(FirebaseAuthGuard)
+@RequireKeys('first_name', 'last_name', 'bvn')
 @Controller('loan')
 export class LoanController {
   constructor(private readonly loanService: LoanService) {}
 
-  @UseGuards(FirebaseAuthGuard)
-  @RequireKeys('first_name', 'last_name', 'bvn')
   @Get('myloans')
   getLoans(@Req() req : Request, @Query('id') id?: string,@Query('type') type?:"active" | "completed" | "pending",
     @Query('page') page = 1,
     @Query('limit') limit = 10){
-      return this.loanService.getLoans({id, page, limit,req})
+      return this.loanService.getLoans({id,type, page, limit,req})
   }
 
-  @UseGuards(FirebaseAuthGuard)
-  @RequireKeys('first_name', 'last_name', 'bvn')
   @Post("agreement")
   loanAgreement(@Req() req : Request, @Body() data : {action : "signed" | "not_signed" | "declined"} ){
     return this.loanService.loanAgreement(req,data.action)
@@ -31,9 +29,7 @@ export class LoanController {
 
 
   @HttpCode(HttpStatus.OK)
-  @RequireKeys('first_name', 'last_name', 'bvn')
   @Post('apply')
-  @UseGuards(FirebaseAuthGuard)
   @UseInterceptors(
     FileFieldsInterceptor(
       [
@@ -63,6 +59,20 @@ export class LoanController {
       bank: files.bank_statement[0],
     };
     return this.loanService.addLoan(loanData,uploadFiles,request)
+  }
+
+  @Roles('admin')
+  @Get('admin/all-loans')
+  getAllLoans( @Query('id') id?: string,@Query('type') type?:"active" | "completed" | "pending",
+    @Query('page') page = 1,
+    @Query('limit') limit = 10){
+    return this.loanService.allLoans({id,type, page, limit})
+  }
+
+  @Roles('admin')
+  @Patch('admin/action/:id')
+  adminLoanAction(@Body() data : AdminLoanActionDto,@Param('id') id : string){
+    return this.loanService.adminloanAction(id, data.amountOffered,data.actionType,data.decline_reason)
   }
 
 

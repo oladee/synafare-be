@@ -5,6 +5,10 @@ import { Customer } from "./customer.entity";
 
 @Schema({timestamps : true})
 export class Loan{
+
+    @Prop()
+    loan_type :  string
+
     @Prop({type : mongoose.Schema.Types.ObjectId, ref : "Customer"})
     customer :  Customer
 
@@ -27,6 +31,9 @@ export class Loan{
     loan_amount_requested : number
 
     @Prop()
+    loan_amount : number
+
+    @Prop()
     loan_amount_offered : number
 
     @Prop({default : 0.06})
@@ -47,8 +54,11 @@ export class Loan{
     @Prop()
     next_payment : Date
 
-    @Prop({enum : ['active', 'completed', 'offer',"pending","rejected"], default : "pending"})
+    @Prop({enum : ['active', 'completed', 'offer',"pending","rejected","approved"], default : "pending"})
     loan_status : string
+
+    @Prop()
+    decline_reason : string
 
     @Prop({default : "not_signed", enum : ["signed","not_signed","declined"]})
     loan_agreement : string

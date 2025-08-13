@@ -2,7 +2,7 @@ import { IsNumber, IsString, Min } from "class-validator"
 
 export class WithdrawPaymentDto {
     @IsNumber()
-    @Min(5000, {message : "Minimum withdrawal amount is 50 naira"})
+    @Min(50, {message : "Minimum withdrawal amount is 50 naira"})
     amount : number
 
     @IsString()

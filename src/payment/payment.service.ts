@@ -205,7 +205,7 @@ export class PaymentService {
 
       await this.trxService.create({
         user: transferData.meta.userId,
-        trx_amount: transferData.amount * 100,
+        trx_amount: transferData.amount,
         trx_type: "withdrawal",
         ref_id: transferData.merchantTxRef,
         trx_date: new Date(),

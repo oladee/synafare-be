@@ -122,9 +122,9 @@ export class WebhookService {
                     // Process the payment success event
                     const {data} = payload
                     const acc_ref = data.transaction.aliasAccountReference;
-                    await this.userService.findUserAndUpdate({_id : acc_ref},{$inc : {wallet_balance : data.transaction.transactionAmount * 100}})
+                    await this.userService.findUserAndUpdate({_id : acc_ref},{$inc : {wallet_balance : data.transaction.transactionAmount}})
 
-                    await this.trxService.create({ user : acc_ref ,trx_amount : data.transaction.transactionAmount * 100, trx_type : "fund_wallet",ref_id : data.transaction.transactionId,trx_date : data.transaction.time,trx_id : `TRX_${uuid}`,trx_status : "successful",})
+                    await this.trxService.create({ user : acc_ref ,trx_amount : data.transaction.transactionAmount , trx_type : "fund_wallet",ref_id : data.transaction.transactionId,trx_date : data.transaction.time,trx_id : `TRX_${uuid}`,trx_status : "successful",})
 
                     console.log("Payment success event received:", payload);
                     // You can add your business logic here
@@ -132,10 +132,10 @@ export class WebhookService {
                     const {data} = payload
                     const {order} = data
 
-                    const updatedDetails = await this.userService.findUserAndUpdate({email : order.customerEmail},{$inc : {wallet_balance : order.amount * 100}})
+                    const updatedDetails = await this.userService.findUserAndUpdate({email : order.customerEmail},{$inc : {wallet_balance : order.amount}})
 
                     if(updatedDetails){
-                        await this.trxService.create({ user : updatedDetails.id ,trx_amount : order.amount * 100, trx_type : "fund_wallet",ref_id : data.transaction.transactionId,trx_date : data.transaction.time,trx_id : `TRX_${uuid}`,trx_status : "successful",})
+                        await this.trxService.create({ user : updatedDetails.id ,trx_amount : order.amount, trx_type : "fund_wallet",ref_id : data.transaction.transactionId,trx_date : data.transaction.time,trx_id : `TRX_${uuid}`,trx_status : "successful",})
                     }
                    
                 }
