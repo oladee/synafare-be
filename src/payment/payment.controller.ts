@@ -3,11 +3,13 @@ import { PaymentService } from './payment.service';
 import { FirebaseAuthGuard } from 'src/auth/auth.guard';
 import { CreatePaymentLinkDto, ValidateBankDto, WithdrawPaymentDto } from './dto/withdraw-payment.dto';
 import { Request } from 'express';
+import { RequireKeys } from 'src/auth/require-keys.decorator';
 
 @Controller('payment')
 export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
+  @RequireKeys('first_name', 'last_name', 'bvn')
   @UseGuards(FirebaseAuthGuard)
   @Get('get-banks')
   getBanks(){
@@ -15,6 +17,7 @@ export class PaymentController {
   }
 
 
+  @RequireKeys('first_name', 'last_name', 'bvn')
   @UseGuards(FirebaseAuthGuard)
   @Post('get-payment-link')
   getPaymentLink(@Body() data : CreatePaymentLinkDto, @Req() req : Request) {
@@ -29,12 +32,14 @@ export class PaymentController {
   //   return this.paymentService.getCheckoutTrx(data.id)
   // }
 
+  @RequireKeys('first_name', 'last_name', 'bvn')
   @UseGuards(FirebaseAuthGuard)
   @Post('validate-bank')
   validateBank(@Body() data : ValidateBankDto){
     return this.paymentService.validateBank(data)
   }
 
+  @RequireKeys('first_name', 'last_name', 'bvn')
   @UseGuards(FirebaseAuthGuard)
   @Post('withdraw')
   withdrawFunds(@Body() dto: WithdrawPaymentDto,@Req() req : Request) {

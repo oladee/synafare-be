@@ -110,7 +110,7 @@ export class LoanService {
 
         const total_repayment = (Number(loan_amount) + Number(loan_interest)).toFixed(2)
 
-        await this.loanModel.create( {...loanData,loan_amount, total_repayment, user : id});
+        await this.loanModel.create( {...loanData,loan_amount_requested : loan_amount, total_repayment, user : id});
         return {
           message: 'Loan Application Submitted Successfully',
         };
@@ -135,6 +135,46 @@ export class LoanService {
           error.message ||'An error occurred while setting up your account',
           error.status || 400
         );
+      }
+    }
+
+    async allLoans({id,type,page,limit,req}:{id ?:string,type ?:string, page : number, limit : number, req : Request}){
+      try {
+        const skip = (page - 1) * limit;
+        const query: any = {};
+  
+        if (id) {
+          query._id = id; 
+        }
+        if(type){
+          query.loan_status = type
+        }
+  
+        const [loans, total, total_accepted, total_declined] = await Promise.all([
+          this.loanModel.find(query)
+          .populate('customer')
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+          this.loanModel.countDocuments(query),
+          this.loanModel.countDocuments({loan_status : {$nin: ['rejected', 'pending']}}),
+          this.loanModel.countDocuments({loan_status : "rejected"}),
+        ]);
+  
+        return {
+          data: loans,
+          meta: {
+            total,
+            total_accepted,
+            total_declined,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+          },
+        };
+      } catch (error) {
+        throw new HttpException(error.message || 'Failed to fetch loans', error.status || 421);
       }
     }
 }

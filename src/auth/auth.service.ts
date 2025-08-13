@@ -104,7 +104,7 @@ export class AuthService {
         throw new BadRequestException("One or more of your input already exist on the platform")
       }
 
-      await this.userService.findUserAndUpdate({_id : id},{...setupData})
+      await this.userService.findUserAndUpdate({_id : id},{...setupData, role : setupData.nature_of_solar_business})
       return {message : "Account setup successful"}
     } catch (error) {
       console.log(error)

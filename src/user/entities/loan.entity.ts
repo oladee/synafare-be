@@ -47,8 +47,11 @@ export class Loan{
     @Prop()
     next_payment : Date
 
-    @Prop({enum : ['active', 'completed', 'offer',"pending"], default : "pending"})
+    @Prop({enum : ['active', 'completed', 'offer',"pending","rejected"], default : "pending"})
     loan_status : string
+
+    @Prop({default : "not_signed", enum : ["signed","not_signed","declined"]})
+    loan_agreement : string
 
     @Prop({type :  mongoose.Schema.Types.ObjectId, ref : "User"})
     user : User;

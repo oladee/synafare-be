@@ -13,6 +13,9 @@ import { PaymentModule } from './payment/payment.module';
 import { WebhookModule } from './webhook/webhook.module';
 import { APP_GUARD, Reflector } from '@nestjs/core';
 import { RolesGuard } from './auth/roles.guard';
+import { KeysGuard } from './auth/keys.guard';
+import { InventoryModule } from './inventory/inventory.module';
+import { FirebaseAuthGuard } from './auth/auth.guard';
 
 @Module({
   imports: [ConfigModule.forRoot({
@@ -25,13 +28,22 @@ import { RolesGuard } from './auth/roles.guard';
     inject :[ConfigService]
   }),UserModule, FirebaseModule, AuthModule, OtpModule, MailModule,ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'), // Path to your static assets
-    }),IdlookupModule, PaymentModule, WebhookModule],
+    }),IdlookupModule, PaymentModule, WebhookModule, InventoryModule],
 
   providers : [
     Reflector,
     {
       provide: APP_GUARD,
+      useClass: FirebaseAuthGuard, // must run first to set request.user
+    },
+    {
+      provide: APP_GUARD,
       useClass: RolesGuard,
-    },]
+    },
+    {
+      provide: APP_GUARD,
+      useClass: KeysGuard,
+    },
+  ]
 })
 export class AppModule {}
