@@ -78,22 +78,6 @@ export class InventoryController {
   myInventory(@Req() req : Request, @Query('id') id?: string,@Query('status') status?: string,@Query('category') category?: string,
   @Query('page') page = 1,
   @Query('limit') limit = 10) {
-    console.log('gddf')
     return this.inventoryService.myInventory({id,status,category,limit,page,req});
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.inventoryService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateInventoryDto: UpdateInventoryDto) {
-    return this.inventoryService.update(+id, updateInventoryDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.inventoryService.remove(+id);
   }
 }

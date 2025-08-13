@@ -155,19 +155,14 @@ export class InventoryService {
     }
   }
 
-  findAll() {
-    return `This action returns all inventory`;
+  async toggleInventoryStatus (req: Request, inventId : string){
+    try {
+      
+    } catch (error) {
+      console.log(error)
+      throw new BadRequestException(error.message || "An error occurred while changing inventory status")
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} inventory`;
-  }
-
-  update(id: number, updateInventoryDto: UpdateInventoryDto) {
-    return `This action updates a #${id} inventory`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} inventory`;
-  }
+  
 }
