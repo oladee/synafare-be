@@ -24,7 +24,10 @@ export class Loan{
     downpayment_in_naira : number
 
     @Prop()
-    loan_amount : number
+    loan_amount_requested : number
+
+    @Prop()
+    loan_amount_offered : number
 
     @Prop({default : 0.06})
     interest : number

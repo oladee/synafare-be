@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import { TransactionService } from './transaction.service';
 import { Request } from 'express';
 import { FirebaseAuthGuard } from 'src/auth/auth.guard';
+import { Roles } from 'src/auth/roles.decorator';
 
 @Controller('transaction')
 export class TrasnsactionController {
@@ -18,8 +19,9 @@ export class TrasnsactionController {
     return this.trxService.myTransactions({ status, page: sanitizedPage, limit: sanitizedLimit,req});
   }
 
-    @UseGuards(FirebaseAuthGuard)
+  @UseGuards(FirebaseAuthGuard)
   @Get('all-transactions')
+  @Roles('admin')
   allTransactions(@Query('status') status?: string,
     @Query('page') page = 1,
     @Query('limit') limit = 10) {

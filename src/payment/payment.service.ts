@@ -144,6 +144,44 @@ export class PaymentService {
     }
   }
 
+
+  async getCheckoutTrx(id : string) {
+    try {
+      const credConfig = {
+        headers: {
+          'Content-Type': 'application/json',
+          accountId : this.account_id,
+        }
+      }
+
+      const {data: tokenData} = await axios.post(`${this.nomba_base_url}/v1/auth/token/issue`,{grant_type: 'client_credentials',client_id : this.client_id, client_secret : this.client_secret}, credConfig)
+      const access_token = tokenData.data.access_token;
+
+      const virtualConfig = {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${access_token}`,
+          accountId : this.account_id,
+        }
+      }
+
+      console.log(id)
+
+      const req_body = {
+        orderReference : id
+      }
+
+
+      const response = await axios.get(`${this.nomba_base_url}/v1/checkout/order/${id}`,virtualConfig);
+
+      return response.data
+      
+    } catch (error) {
+      console.log(error)
+      throw new BadRequestException(error.response.data || "An error occurred while creating payment link")
+    }
+  }
+
   async parentTransfer(transferData:{amount : number, accountNumber : string, accountName : string, bankCode : string, merchantTxRef : string, senderName : string, narration : string,meta : {userId : string}}) {
     try {
 

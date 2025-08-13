@@ -21,7 +21,7 @@ export class User {
   @Prop()
   phn_no: string;
 
-  @Prop({enum : ["installer","distributor","supplier"]})
+  @Prop({enum : ["installer","distributor","supplier",'admin']})
   nature_of_solar_business: string;
 
   @Prop({enum : ["nin","dl","vin"]})
@@ -59,6 +59,9 @@ export class User {
 
   @Prop({default : 0})
   available_credit : number;
+
+  @Prop({enum : ["installer","distributor","supplier",'admin']})
+  role: string;
 }
 
 export type UserDocument = HydratedDocument<User>;

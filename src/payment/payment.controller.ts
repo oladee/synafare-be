@@ -16,10 +16,18 @@ export class PaymentController {
 
 
   @UseGuards(FirebaseAuthGuard)
-  @Get('get-payment-link')
+  @Post('get-payment-link')
   getPaymentLink(@Body() data : CreatePaymentLinkDto, @Req() req : Request) {
     return this.paymentService.getPaymentLink(data,req)
   }
+
+  // "checkoutLink": "https://checkout.nomba.com/pay/159d2505-bb38-46b2-8c2c-3407d4265bcb",
+  //       "orderReference": "159d2505-bb38-46b2-8c2c-3407d4265bcb"
+  // @UseGuards(FirebaseAuthGuard)
+  // @Get('get-checkout-trx')
+  // getCheckoutTrx(@Body() data : {id:string}) {
+  //   return this.paymentService.getCheckoutTrx(data.id)
+  // }
 
   @UseGuards(FirebaseAuthGuard)
   @Post('validate-bank')

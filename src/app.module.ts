@@ -11,6 +11,8 @@ import { join } from 'path';
 import { IdlookupModule } from './utils/idlookup/idlookup.module';
 import { PaymentModule } from './payment/payment.module';
 import { WebhookModule } from './webhook/webhook.module';
+import { APP_GUARD, Reflector } from '@nestjs/core';
+import { RolesGuard } from './auth/roles.guard';
 
 @Module({
   imports: [ConfigModule.forRoot({
@@ -24,5 +26,12 @@ import { WebhookModule } from './webhook/webhook.module';
   }),UserModule, FirebaseModule, AuthModule, OtpModule, MailModule,ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'), // Path to your static assets
     }),IdlookupModule, PaymentModule, WebhookModule],
+
+  providers : [
+    Reflector,
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },]
 })
 export class AppModule {}

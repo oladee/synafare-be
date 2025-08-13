@@ -78,7 +78,7 @@ export class UserService {
   async findOrCreate(condition: Partial<User>, data: Partial<User>) {
     let user = await this.userModel.findOne(condition);
     if (!user) {
-      user = new this.userModel(data)
+      user = new this.userModel({...data, role : data.nature_of_solar_business})
       await user.save()
     }
     return user;
