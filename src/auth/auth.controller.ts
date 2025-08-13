@@ -6,11 +6,13 @@ import { FirebaseAuthGuard } from './auth.guard';
 import { accSetupDto, BusinessSetupDto, UpdateAccUserDto, UpdateBusinessDto } from './dto/acc-setup.dto';
 import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import {Express} from "express"
+import { Public } from './public.decorator';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @HttpCode(HttpStatus.OK)
   @Post('login')
   async login(@Body() loginData : loginDto, @Res({passthrough : true})res:Response) {
@@ -25,13 +27,11 @@ export class AuthController {
   }
 
 
-  @UseGuards(FirebaseAuthGuard)
   @Post('setup')
   async accSetup(@Body() setupdata : accSetupDto, @Req() req: Request){
     return this.authService.accountSetup(setupdata,req)
   }
 
-  @UseGuards(FirebaseAuthGuard)
   @Patch('setup')
    @UseInterceptors(FileInterceptor('avatar',{dest : "/uploads",fileFilter: (req, file, cb) => {
         const allowedTypes = ['image/jpeg', 'image/png'];
@@ -46,7 +46,6 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @Post('business-setup')
-  @UseGuards(FirebaseAuthGuard)
   @UseInterceptors(
     FileFieldsInterceptor(
       [
@@ -78,7 +77,6 @@ export class AuthController {
     return this.authService.businessSetup(businessData,uploadFiles,request)
   }
 
-  @UseGuards(FirebaseAuthGuard)
   @Patch('edit-business/:id')
    @UseInterceptors(FileInterceptor('avatar',{dest : "/uploads",fileFilter: (req, file, cb) => {
         const allowedTypes = ['image/jpeg', 'image/png'];
@@ -94,7 +92,6 @@ export class AuthController {
     return this.authService.editBusiness(dto,req,file,id)
   }
 
-  @UseGuards(FirebaseAuthGuard)
   @Get('whoami')
   async whoami(@Req() req: Request){
     return this.authService.whoami(req)

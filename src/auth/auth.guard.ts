@@ -4,11 +4,20 @@ import { Request } from 'express';
 import { UserService } from 'src/user/user.service';
 import { FirebaseService } from 'src/utils/firebase/firebase.service';
 import { JwtService } from '@nestjs/jwt';
+import { Reflector } from '@nestjs/core';
+import { IS_PUBLIC_KEY } from './public.decorator';
 
 @Injectable()
 export class FirebaseAuthGuard implements CanActivate {
-    constructor(private readonly firebaseService: FirebaseService, private readonly userService: UserService,private jwtService: JwtService) {}
+    constructor(private readonly firebaseService: FirebaseService, private readonly userService: UserService,private jwtService: JwtService,private reflector: Reflector) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (isPublic) return true;
+    
     const JWT_SECRET = process.env.JWT_SECRET
     const request = context.switchToHttp().getRequest<Request>();
     const token = this.extractTokenFromHeader(request)

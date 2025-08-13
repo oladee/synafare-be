@@ -34,7 +34,7 @@ import { FirebaseAuthGuard } from './auth/auth.guard';
     Reflector,
     {
       provide: APP_GUARD,
-      useClass: FirebaseAuthGuard, // must run first to set request.user
+      useClass: FirebaseAuthGuard, 
     },
     {
       provide: APP_GUARD,

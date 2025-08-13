@@ -8,13 +8,13 @@ import { Request } from 'express';
 import { FileSizeValidationPipe } from 'src/auth/auth.service';
 import { Roles } from 'src/auth/roles.decorator';
 
+@UseGuards(FirebaseAuthGuard)
 @Controller('inventory')
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
   @HttpCode(HttpStatus.OK)
   @Post('add')
-  @UseGuards(FirebaseAuthGuard)
   @Roles('distributor', 'supplier')
   @UseInterceptors(
   FileFieldsInterceptor(
@@ -45,7 +45,6 @@ export class InventoryController {
 
   @HttpCode(HttpStatus.OK)
   @Patch('edit/:id')
-  @UseGuards(FirebaseAuthGuard)
   @Roles('distributor', 'supplier')
   @UseInterceptors(
   FileFieldsInterceptor(
@@ -72,7 +71,7 @@ export class InventoryController {
     return this.inventoryService.edit(UpdateInventoryDto,req,id,uploadFiles.product_image);
   }
 
-  @UseGuards(FirebaseAuthGuard)
+  
   @Get('my-inventory')
   @Roles('distributor', 'supplier')
   myInventory(@Req() req : Request, @Query('id') id?: string,@Query('status') status?: string,@Query('category') category?: string,
