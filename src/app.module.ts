@@ -18,7 +18,7 @@ import { WebhookModule } from './webhook/webhook.module';
   }),MongooseModule.forRootAsync({
     imports : [ConfigModule],
     useFactory : (config:ConfigService)=>({
-      uri : config.get("NODE_ENV") === "dev" ? config.get("MONGO_TEST_URL") : config.get("MONGO_PROD_URL")
+      uri : config.get("MONGO_PROD_URL")
     }),
     inject :[ConfigService]
   }),UserModule, FirebaseModule, AuthModule, OtpModule, MailModule,ServeStaticModule.forRoot({
