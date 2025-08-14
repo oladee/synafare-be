@@ -60,7 +60,7 @@ export class Loan{
     @Prop()
     next_payment : Date
 
-    @Prop({enum : ['active', 'completed', 'offer',"pending","rejected","approved"], default : "pending"})
+    @Prop({enum : ['active', 'completed', 'offer',"pending","rejected","approved","cancelled"], default : "pending"})
     loan_status : string
 
     @Prop()

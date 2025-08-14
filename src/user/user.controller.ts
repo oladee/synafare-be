@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { UserService } from './user.service';
 import { Types } from 'mongoose';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller('user')
 export class UserController {
@@ -33,6 +34,31 @@ export class UserController {
   @Delete(':id')
   deleteOne(@Param('id') id:string) {
     return this.userService.deleteUser(id);
+  }
+
+  @Patch(':id/verify')
+  async verifyUser(@Param('id') id: string) {
+    return this.userService.verifyUser(id);
+  }
+
+  @Patch(':id/decline')
+  async declineUser(@Param('id') id: string) {
+    return this.userService.declineUser(id);
+  }
+
+  @Patch(':id')
+  async editUser(@Param('id') id: string, @Body() dto: UpdateUserDto) {
+    return this.userService.editUser(id, dto);
+  }
+
+  // @Patch(':id/account-config')
+  // async accountConfig(@Param('id') id: string, @Body() dto: AccountConfigDto) {
+  //   return this.userService.updateAccountConfig(id, dto);
+  // }
+
+  @Patch(':id/block')
+  async blockUser(@Param('id') id: string) {
+    return this.userService.blockUser(id);
   }
 
   

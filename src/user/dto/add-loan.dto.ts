@@ -48,6 +48,17 @@ export enum validAdminLoanActionType{
     rejected = "rejected",
     offer =  "offer"
 }
+
+
+export enum validUserLoanActionType{
+    rejected = "rejected",
+    cancelled =  "cancelled"
+}
+
+export class UserLoanActionDto {
+    @IsEnum(validUserLoanActionType)
+    actionType : validUserLoanActionType
+}
 export class AdminLoanActionDto {
     @IsEnum(validAdminLoanActionType)
     actionType : validAdminLoanActionType

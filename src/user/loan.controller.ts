@@ -4,7 +4,7 @@ import { Request } from "express";
 import { LoanService } from "./loan.service";
 import { FileSizeValidationPipe } from "src/auth/auth.service";
 import { FileFieldsInterceptor } from "@nestjs/platform-express";
-import { AddLoanDto, AdminLoanActionDto, SignAgreementDto } from "./dto/add-loan.dto";
+import { AddLoanDto, AdminLoanActionDto, SignAgreementDto, UserLoanActionDto, validUserLoanActionType } from "./dto/add-loan.dto";
 import { RequireKeys } from "src/auth/require-keys.decorator";
 import { Roles } from "src/auth/roles.decorator";
 
@@ -59,6 +59,16 @@ export class LoanController {
       bank: files.bank_statement[0],
     };
     return this.loanService.addLoan(loanData,uploadFiles,request)
+  }
+
+  @Patch('action/:id')
+  userLoanAction(@Body() data : UserLoanActionDto,@Param('id') id : string,@Req() req : Request){
+    return this.loanService.userloanAction(id, data.actionType,req)
+  }
+
+  @Get(':id/repay-history')
+  repayHistory(@Param('id') id : string,@Req() req : Request){
+    return this.loanService.loanRepaymentHistory(id, req)
   }
 
   @Patch(':id/agreement')

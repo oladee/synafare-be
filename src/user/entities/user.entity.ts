@@ -42,22 +42,22 @@ export class User {
   @Prop()
   otpExpiry : Date
 
-  @Prop({default : "inactive", enum : ["active","inactive"]})
+  @Prop({enum : ["inactive","verified","pending"]})
   account_status : string
 
-  @Prop({default : "not_submitted", enum : ["submitted","not_submitted"]})
+  @Prop({ enum : ["submitted","not_submitted"]})
   business_document : string
 
-  @Prop({default : "not_signed", enum : ["signed","not_signed","declined"]})
+  @Prop({ enum : ["signed","not_signed","declined"]})
   loan_agreement : string
 
-  @Prop({default : 0})
+  @Prop()
   wallet_balance : number;
 
-  @Prop({default : 0})
+  @Prop()
   loan_balance : number;
 
-  @Prop({default : 0})
+  @Prop()
   available_credit : number;
 
   @Prop({enum : ["installer","distributor","supplier",'admin']})

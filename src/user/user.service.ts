@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { ClientSession, Model, Types } from 'mongoose';
 import { FirebaseService } from 'src/utils/firebase/firebase.service';
 import { BusinessSetupDto } from 'src/auth/dto/acc-setup.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
@@ -82,7 +83,7 @@ export class UserService {
   async findOrCreate(condition: Partial<User>, data: Partial<User>) {
     let user = await this.userModel.findOne(condition);
     if (!user) {
-      user = new this.userModel(data)
+      user = new this.userModel({...data, account_status : "pending",   loan_agreement : "not_signed",business_document : "not_submitted"})
       await user.save()
     }
     return user;
@@ -160,5 +161,38 @@ export class UserService {
     } catch (error) {
       throw new BadRequestException("An error occurred while fetching business details")
     }
+  }
+
+
+  async verifyUser(id: string): Promise<User | null> {
+    return this.userModel.findByIdAndUpdate(
+      id,
+      { account_status: 'verified' },
+      { new: true },
+    );
+  }
+
+  async declineUser(id: string): Promise<User | null> {
+    return this.userModel.findByIdAndUpdate(
+      id,
+      {account_status: 'inactive' },
+      { new: true },
+    );
+  }
+
+  async editUser(id: string, updateData: UpdateUserDto): Promise<User | null> {
+    return this.userModel.findByIdAndUpdate(id, updateData, { new: true });
+  }
+
+  // async updateAccountConfig(id: string, config: AccountConfigDto): Promise<User> {
+  //   return this.userModel.findByIdAndUpdate(id, config, { new: true });
+  // }
+
+  async blockUser(id: string): Promise<User | null> {
+    return this.userModel.findByIdAndUpdate(
+      id,
+      { account_status: 'inactive' },
+      { new: true },
+    );
   }
 }

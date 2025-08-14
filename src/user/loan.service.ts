@@ -145,6 +145,45 @@ export class LoanService {
     }
   }
 
+  async userloanAction(loanId: string, actionType : "cancelled" | "rejected",req : Request){
+    const {id} = req.user
+    try {
+      const loanInfo = await this.loanModel.findOne({
+        _id: new Types.ObjectId(loanId),
+        loan_status: { $in: ['pending', 'offer'] },
+        user : id
+      });
+
+      if (!loanInfo) {
+        throw new Error("Loan not found or not in pending/offer status");
+      }
+      if(actionType == "cancelled"){
+        if(loanInfo.loan_status !== "pending")throw new BadRequestException("Only pending request can be cancelled")
+        await this.loanModel.findOneAndDelete({_id : loanId})
+
+        return {message : "Loan cancelled successfully"}
+      }else if(actionType == "rejected"){
+        if(loanInfo.loan_status !== "offer") throw new BadRequestException("Only loan offers can be rejected")
+        await this.loanModel.findOneAndUpdate({_id : loanId},{loan_status : "rejected"})
+      }
+
+    } catch (error) {
+      console.log(error)
+      throw new BadRequestException(error.message || "An error occurred while performing action")
+    }
+  }
+
+  async loanRepaymentHistory(loanId : string, req :Request){
+    const {id} = req.user
+    try {
+      const result = await this.repayModel.find({loan : loanId, user : id})
+      return {message : "Fetched repayment history successfully", result}
+    } catch (error) {
+      console.log(error)
+      throw new BadRequestException(error.message || "An error occurred while trying to fetch user repayment history")
+    }
+  }
+
   async offerAgreement(loanId : string, action : string, req : Request){
     const user = req.user
     try {
@@ -233,8 +272,9 @@ export class LoanService {
     await this.userService.findUserAndUpdate({_id : user.id},{$inc : {wallet_balance : -loan_exist.downpayment_in_naira}})
 
     await this.repayModel.updateMany({loan : loanId},{is_paid : true})
+    await this.loanModel.findOneAndUpdate({_id : loanId},{paid_duration : loan_exist.loan_duration_in_months})
 
-    return {}
+    return {message : "Loan liquidated successfuly"}
     } catch (error) {
       console.log(error)
       throw new BadRequestException(error.message || "An error occurreed while processing liquidation")
