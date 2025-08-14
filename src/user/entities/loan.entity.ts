@@ -76,7 +76,7 @@ export class Loan{
     user : User;
 }
 
-@Schema({})
+@Schema({timestamps : true})
 export class RepaymentHistory {
     @Prop({type : mongoose.Schema.Types.ObjectId,ref : "Loan"})
     loan : Loan
@@ -90,5 +90,10 @@ export class RepaymentHistory {
     @Prop({default : false})
     is_paid : boolean
 
+    @Prop({type : mongoose.Schema.Types.ObjectId,ref : "User"})
+    user : User
+
 }
+
+export const RepaymentHistorySchema = SchemaFactory.createForClass(RepaymentHistory)
 export const LoanSchema = SchemaFactory.createForClass(Loan)

@@ -5,6 +5,7 @@ import * as dotenv from 'dotenv';
 import { UserService } from 'src/user/user.service';
 import {v4 as uuidv4} from 'uuid';
 import { TransactionService } from 'src/payment/transaction.service';
+import { validTrxStatus, validTrxType } from 'src/payment/dto/create-transaction.dto';
 dotenv.config();
 
 @Injectable()
@@ -124,7 +125,7 @@ export class WebhookService {
                     const acc_ref = data.transaction.aliasAccountReference;
                     await this.userService.findUserAndUpdate({_id : acc_ref},{$inc : {wallet_balance : data.transaction.transactionAmount}})
 
-                    await this.trxService.create({ user : acc_ref ,trx_amount : data.transaction.transactionAmount , trx_type : "fund_wallet",ref_id : data.transaction.transactionId,trx_date : data.transaction.time,trx_id : `TRX_${uuid}`,trx_status : "successful",})
+                    await this.trxService.create({ user : acc_ref ,trx_amount : data.transaction.transactionAmount , trx_type : validTrxType.fund_wallet,ref_id : data.transaction.transactionId,trx_date : data.transaction.time,trx_id : `TRX_${uuid}`,trx_status : validTrxStatus.successful,})
 
                     console.log("Payment success event received:", payload);
                     // You can add your business logic here
@@ -135,7 +136,7 @@ export class WebhookService {
                     const updatedDetails = await this.userService.findUserAndUpdate({email : order.customerEmail},{$inc : {wallet_balance : order.amount}})
 
                     if(updatedDetails){
-                        await this.trxService.create({ user : updatedDetails.id ,trx_amount : order.amount, trx_type : "fund_wallet",ref_id : data.transaction.transactionId,trx_date : data.transaction.time,trx_id : `TRX_${uuid}`,trx_status : "successful",})
+                        await this.trxService.create({ user : updatedDetails.id ,trx_amount : order.amount, trx_type : validTrxType.fund_wallet,ref_id : data.transaction.transactionId,trx_date : data.transaction.time,trx_id : `TRX_${uuid}`,trx_status : validTrxStatus.successful,})
                     }
                    
                 }

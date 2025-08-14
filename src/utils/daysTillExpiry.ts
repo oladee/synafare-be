@@ -12,3 +12,13 @@ export function daysUntilExpiry(expiry: string | Date): number {
   // Convert ms → days
   return Math.floor(diffMs / (1000 * 60 * 60 * 24));
 }
+
+export function getDateMonthsFromNow(x: number): Date {
+  const today: Date = new Date();
+  const futureDate: Date = new Date(today);
+
+  futureDate.setMonth(futureDate.getMonth() + x);
+
+  return futureDate;
+}
+

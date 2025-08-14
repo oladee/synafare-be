@@ -1,18 +1,22 @@
 import { BadRequestException, HttpException, Inject, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model, Types } from "mongoose";
+import mongoose, { Model, Types } from "mongoose";
 import { Request } from "express";
-import { Loan } from "./entities/loan.entity";
+import { Loan, RepaymentHistory } from "./entities/loan.entity";
 import * as fs from "fs"
 import { AddLoanDto, ValidLoanTypes } from "./dto/add-loan.dto";
 import {v2 as Cloudinary, UploadApiResponse} from 'cloudinary'
 import { UserService } from "./user.service";
+import { TransactionService } from "src/payment/transaction.service";
+import {v4 as uuidv4} from "uuid"
+import { validTrxStatus, validTrxType } from "src/payment/dto/create-transaction.dto";
+import { getDateMonthsFromNow } from "src/utils/daysTillExpiry";
 
 
 
 @Injectable()
 export class LoanService {
-  constructor(@InjectModel(Loan.name) private loanModel: Model<Loan>,@Inject('CLOUDINARY') private readonly cloudinary: typeof Cloudinary, private readonly userService : UserService) {}
+  constructor(@InjectModel(Loan.name) private loanModel: Model<Loan>,@Inject('CLOUDINARY') private readonly cloudinary: typeof Cloudinary, private readonly userService : UserService, private readonly trxservice : TransactionService,@InjectModel(RepaymentHistory.name) private repayModel : Model<RepaymentHistory>) {}
 
 
   async getLoans({id,type,page,limit,req}:{id ?:string,type ?:string, page : number, limit : number, req : Request}){
@@ -141,12 +145,99 @@ export class LoanService {
     }
   }
 
-  async payDownPayment(loanId : string, req : Request){
+  async offerAgreement(loanId : string, action : string, req : Request){
+    const user = req.user
     try {
-      // await this.loanModel
+      const loan_exist = await this.loanModel.findOne({_id : loanId,user : user.id, loan_status : "offer",loan_agreement : {$nin : ["signed"]}})
+      if(!loan_exist){
+        throw new BadRequestException("Loan offer does not exist")
+      }
+      await this.loanModel.findOneAndUpdate({_id : loanId},{loan_agreement : action})
+
+      return {message : `Loan offer has been ${action}`}
     } catch (error) {
       console.log(error)
+      throw new BadRequestException(error.message || "An error occurred while signing your agreement")
+    }
+  }
+
+  async payDownPayment(loanId : string, req : Request){
+    const user = req.user
+    const session = await mongoose.startSession();
+    try {
+      session.startTransaction();
+      const loan_exist = await this.loanModel.findOne({_id : loanId, user : user.id, loan_agreement : "signed"})
+      if(!loan_exist){
+        throw new BadRequestException("Loan details not found, kindly check back and ensure agreement has been signed")
+      }
+
+      if(user.wallet_balance < loan_exist.downpayment_in_naira){
+        throw new BadRequestException("Insufficient balance, kindly top up your balance")
+      }
+
+      await this.userService.findUserAndUpdate({_id : user.id},{$inc : {wallet_balance : -loan_exist.downpayment_in_naira}}, session)
+
+      await this.trxservice.create({trx_amount : loan_exist.downpayment_in_naira,trx_status : validTrxStatus.successful,trx_date : new Date(),trx_id : uuidv4(),user : user.id,trx_type : validTrxType.down_payment},session)
+
+      await this.loanModel.findOneAndUpdate({_id : loanId},{loan_status : "active"},{session})
+
+      await this.userService.findUserAndUpdate({_id : user.id},{$inc : {wallet_balance : loan_exist.loan_amount}}, session)
+
+      await this.trxservice.create({trx_amount : loan_exist.loan_amount,trx_status : validTrxStatus.successful,trx_date : new Date(),trx_id : uuidv4(),user : user.id,trx_type : validTrxType.loan_disbursment},session)
+
+      await this.repayModel.create(
+        Array.from(
+          { length: loan_exist.loan_duration_in_months }, 
+          (_, i) => ({amount : loan_exist.monthly_repayment,is_paid : false, loan : loanId, repayment_date : getDateMonthsFromNow(i +1),user : user.id})
+        ),{session}
+      )
+
+      await session.commitTransaction();
+
+      return {message : "Downpaymemnt processed successfully"}
+    } catch (error) {
+      await session.abortTransaction();
+      console.log(error)
       throw new BadRequestException(error.message || "An error occurred while processing downpayment")
+    }finally{
+      session.endSession();
+    }
+  }
+
+  async liquidateLoan(loanId : string, req : Request){
+    const user = req.user
+    try {
+      const loan_exist = await this.loanModel.findOne({_id : loanId, user : user.id,loan_status : "active"})
+      if(!loan_exist) throw new BadRequestException("Loan does not exist")
+
+      const result = await this.repayModel.aggregate([
+      {
+        $match: {
+          loan: new Types.ObjectId(loanId),
+          is_paid: false
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalAmount: { $sum: "$amount" }
+        }
+      }
+    ]);
+
+    const totalAmount = result.length > 0 ? result[0].totalAmount : 0;
+    if(totalAmount === 0)return{message : "Looks like you already paid off your loan"}
+
+    if(totalAmount  > user.wallet_balance) throw new BadRequestException("Insufficient balance, can not proceed to settle your loan")
+
+    await this.userService.findUserAndUpdate({_id : user.id},{$inc : {wallet_balance : -loan_exist.downpayment_in_naira}})
+
+    await this.repayModel.updateMany({loan : loanId},{is_paid : true})
+
+    return {}
+    } catch (error) {
+      console.log(error)
+      throw new BadRequestException(error.message || "An error occurreed while processing liquidation")
     }
   }
 

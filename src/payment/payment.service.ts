@@ -5,6 +5,7 @@ import { Request } from 'express';
 import axios from 'axios';
 import {v4 as uuidv4} from 'uuid'
 import { TransactionService } from './transaction.service';
+import { validTrxStatus, validTrxType } from './dto/create-transaction.dto';
 
 @Injectable()
 export class PaymentService {
@@ -244,11 +245,11 @@ export class PaymentService {
       await this.trxService.create({
         user: transferData.meta.userId,
         trx_amount: transferData.amount,
-        trx_type: "withdrawal",
+        trx_type: validTrxType.withdrawal,
         ref_id: transferData.merchantTxRef,
         trx_date: new Date(),
         trx_id: `TRX_${uuidv4()}`,
-        trx_status: "pending",
+        trx_status: validTrxStatus.pending,
       })
 
       const response = await axios.post(`${this.nomba_base_url}/v1/transfers/bank/`, transferData, virtualConfig);

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { PaymentController } from './payment.controller';
 import { AccountService } from './account.service';
@@ -12,7 +12,7 @@ import { Transaction, TransactionSchema } from './entities/transaction.entity';
 import { TrasnsactionController } from './transaction.controller';
 
 @Module({
-  imports: [MongooseModule.forFeature([{name : Account.name,schema : AccountSchema},{name : Transaction.name, schema : TransactionSchema}]),FirebaseModule,UserModule],
+  imports: [MongooseModule.forFeature([{name : Account.name,schema : AccountSchema},{name : Transaction.name, schema : TransactionSchema}]),FirebaseModule,forwardRef(()=>UserModule)],
   controllers: [PaymentController,AccountController,TrasnsactionController],
   providers: [PaymentService,AccountService, TransactionService],
   exports: [PaymentService, AccountService, TransactionService]

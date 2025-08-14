@@ -1,7 +1,7 @@
 import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
 import { Business_Information, User } from './entities/user.entity';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { ClientSession, Model, Types } from 'mongoose';
 import { FirebaseService } from 'src/utils/firebase/firebase.service';
 import { BusinessSetupDto } from 'src/auth/dto/acc-setup.dto';
 
@@ -65,9 +65,13 @@ export class UserService {
     
   }
 
-  async findUserAndUpdate(searchParam : object, update : object){
+  async findUserAndUpdate(searchParam : object, update : object, session ?: ClientSession){
+    const options: any = { new: true };
+    if (session) {
+      options.session = session;
+    }
     try {
-      const userDetails = await this.userModel.findOneAndUpdate(searchParam,update,{new : true})
+      const userDetails = await this.userModel.findOneAndUpdate(searchParam,update,{new : true, options})
       return userDetails
     } catch (error) {
       console.log(error)

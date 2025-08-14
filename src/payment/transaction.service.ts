@@ -1,17 +1,21 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Transaction } from './entities/transaction.entity';
-import { Model } from 'mongoose';
+import { ClientSession, Model } from 'mongoose';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { Request } from 'express';
 
 @Injectable()
 export class TransactionService {
   constructor(@InjectModel(Transaction.name) private readonly trxModel : Model<Transaction>) {}    
-  async create(dto: CreateTransactionDto) {
+  async create(dto: CreateTransactionDto,session ?: ClientSession) {
     try {
-        const trx  = await this.trxModel.create(dto);
-        return trx;
+      const options:any = {}
+      if(session){
+        options.session = session
+      }
+      const trx  = await this.trxModel.create(dto,options);
+      return trx;
     } catch (error) {
         console.log(error)
         throw new BadRequestException(error.message || "An error occurred while creating the transaction");

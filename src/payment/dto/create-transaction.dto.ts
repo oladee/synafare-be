@@ -1,4 +1,4 @@
-import { IsDate, IsEnum, IsNumber, IsString } from "class-validator";
+import { IsDate, IsEnum, IsNumber, IsOptional, IsString } from "class-validator";
 
 
 export enum validTrxStatus {
@@ -11,6 +11,7 @@ export enum validTrxType {
     fund_wallet = 'fund_wallet',
     withdrawal = 'withdrawal',
     invoice_payment = 'invoice_payment',
+    down_payment = 'down_payment',
     loan_disbursment = 'loan_disbursment',
     loan_repayment = 'loan_repayment',
 }
@@ -23,17 +24,18 @@ export class CreateTransactionDto {
     @IsString()
     trx_id: string;
 
+    @IsOptional()
     @IsString()
-    ref_id: string;
+    ref_id?: string;
 
     @IsEnum(validTrxType)
-    trx_type: string;
+    trx_type: validTrxType;
 
     @IsNumber() 
     trx_amount: number;
 
     @IsEnum(validTrxStatus)
-    trx_status: string;
+    trx_status: validTrxStatus;
 
     @IsDate()
     trx_date: Date;

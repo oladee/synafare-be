@@ -1,6 +1,5 @@
 import { Transform } from "class-transformer"
 import { IsEnum, IsNumber, IsOptional, IsString, Max, Min, ValidateIf } from "class-validator"
-import { Schema } from "mongoose"
 
 
 export enum ValidLoanTypes{
@@ -60,4 +59,14 @@ export class AdminLoanActionDto {
     @ValidateIf((o)=>o.actionType === validAdminLoanActionType.rejected)
     @IsString()
     decline_reason : string
+}
+
+
+export enum ValidSignTypes{
+    signed = "signed",
+    declined = "declined"
+}
+export class SignAgreementDto{
+    @IsEnum(ValidSignTypes)
+    actionType : ValidSignTypes
 }
