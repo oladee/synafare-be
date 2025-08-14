@@ -7,6 +7,7 @@ import { accSetupDto, BusinessSetupDto, UpdateAccUserDto, UpdateBusinessDto } fr
 import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import {Express} from "express"
 import { Public } from './public.decorator';
+import { CreateAdminDto } from './dto/auth.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -95,6 +96,12 @@ export class AuthController {
   @Get('whoami')
   async whoami(@Req() req: Request){
     return this.authService.whoami(req)
+  }
+
+  @Public()
+  @Post('create/admin')
+  async createAdmin(@Body() data : CreateAdminDto){
+    return this.authService.createAdmin(data)
   }
 
 }

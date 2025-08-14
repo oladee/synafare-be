@@ -46,7 +46,6 @@ export class AddLoanDto{
 }
 
 export enum validAdminLoanActionType{
-    approved = "approved",
     rejected = "rejected",
     offer =  "offer"
 }

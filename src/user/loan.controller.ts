@@ -69,7 +69,7 @@ export class LoanController {
     return this.loanService.allLoans({id,type, page, limit})
   }
 
-  @Roles('admin')
+  // @Roles('admin')
   @Patch('admin/action/:id')
   adminLoanAction(@Body() data : AdminLoanActionDto,@Param('id') id : string){
     return this.loanService.adminloanAction(id, data.amountOffered,data.actionType,data.decline_reason)

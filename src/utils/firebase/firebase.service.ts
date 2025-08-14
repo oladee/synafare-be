@@ -8,7 +8,7 @@ export class FirebaseService {
     private firebaseApp: App;
 
     onModuleInit() {
-    if (!getApps.length) {
+    if (!getApps().length) {
       this.firebaseApp = initializeApp({
         credential: cert({
           projectId: process.env.FIREBASE_PROJECT_ID,
@@ -40,6 +40,15 @@ export class FirebaseService {
 
   async getUser(uid: string) {
     return this.auth.getUser(uid);
+  }
+
+    // ✅ Add createUser method
+  async createUser(email: string, password: string, displayName?: string) {
+    return this.auth.createUser({
+      email,
+      password,
+      displayName,
+    });
   }
 }
 

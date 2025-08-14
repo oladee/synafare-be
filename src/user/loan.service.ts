@@ -109,11 +109,11 @@ export class LoanService {
 
       const loan_amount = (loanData.transaction_cost - loanData.downpayment_in_naira).toFixed(2)
 
-      const loan_interest = ((Number(loan_amount) * 0.06) * 3).toFixed(2)
+      const loan_interest = ((Number(loan_amount) * 0.06) * loanData.loan_duration_in_months).toFixed(2)
 
       const total_repayment = (Number(loan_amount) + Number(loan_interest)).toFixed(2)
 
-      await this.loanModel.create( {...loanData,loan_amount_requested : loan_amount,loan_amount, total_repayment, user : id});
+      await this.loanModel.create({...loanData,loan_amount_requested : loan_amount,loan_amount, total_repayment, user : id});
       return {
         message: 'Loan Application Submitted Successfully',
       };
@@ -181,7 +181,7 @@ export class LoanService {
     }
   }
 
-  async adminloanAction(loanId: string, amountOffered : number, actionType : "offer" | "approved" | "rejected", decline_reason : string){
+  async adminloanAction(loanId: string, amountOffered : number, actionType : "offer" | "rejected", decline_reason : string){
 
     try {
       const loanInfo = await this.loanModel.findOne({_id : loanId})
@@ -195,9 +195,6 @@ export class LoanService {
         if(amountOffered === 0){
           throw new BadRequestException("Offerred Amount can not be zero")
         }
-        if(amountOffered === loanInfo.loan_amount_requested){
-          throw new BadRequestException("Invalid request sent, Amount requested must differ from amount offered to be able to send in a new offer")          
-        }
         if(amountOffered > loanInfo.transaction_cost){
           throw new BadRequestException("Invalid request sent, Amount offerred cannot be higher than transaction cost")          
         }
@@ -207,16 +204,15 @@ export class LoanService {
         loanObject.downpayment_in_percent = (loanObject.downpayment_in_naira) / loanObject.transaction_cost
         loanObject.loan_status = "offer"
         loanObject.loan_amount = amountOffered
-        loanObject.interest = Number(((Number(loanObject.loan_amount) * 0.06) * 3).toFixed(2))
-        loanObject.total_repayment = Number((Number(loanObject.loan_amount) + Number(loanObject.interest)).toFixed(2))
+        loanObject.monthly_interest_value = Number(((Number(loanObject.loan_amount) * 0.06)).toFixed(2))
+        loanObject.total_repayment = Number((Number(loanObject.loan_amount) + Number(loanObject.monthly_interest_value * loanObject.loan_duration_in_months)).toFixed(2))
 
-        const update = await this.loanModel.findOneAndUpdate({_id : loanId},{...loanObject},{new : true})
+        loanObject.monthly_repayment = Number((loanObject.total_repayment/loanObject.loan_duration_in_months).toFixed(2))
+
+
+        const update = await this.loanModel.findOneAndUpdate({_id : loanId},{...loanObject},{new : true,runValidators : true})
 
         return {message : "Loan offer sent successfully",update}
-      }else if(actionType == "approved"){
-        const update = await this.loanModel.findOneAndUpdate({_id : loanId},{loan_status : "approved",loan_amount_offered : loanInfo.loan_amount_requested, loan_amount : loanInfo.loan_amount_requested},{new : true})
-
-        return {message : "Loan approved successfully", update}
       }
 
     } catch (error) {

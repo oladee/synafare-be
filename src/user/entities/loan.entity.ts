@@ -18,10 +18,13 @@ export class Loan{
     @Prop()
     paid_duration : number
 
-    @Prop({min : 3, max : 6})
+    @Prop({type : Number, min : 3, max : 6})
     loan_duration_in_months : number
 
-    @Prop({min : 0.3, max : 0.7})
+    @Prop({type : Number, 
+        min: [0.3, 'Downpayment must be at least 30%'],
+        max: [0.7, 'Downpayment cannot exceed 70%'],
+    })
     downpayment_in_percent : number
 
     @Prop()
@@ -38,6 +41,9 @@ export class Loan{
 
     @Prop({default : 0.06})
     interest : number
+
+    @Prop()
+    monthly_interest_value : number
 
     @Prop()
     outstanding_bal : number
@@ -59,6 +65,9 @@ export class Loan{
 
     @Prop()
     decline_reason : string
+
+    @Prop()
+    monthly_repayment : number
 
     @Prop({default : "not_signed", enum : ["signed","not_signed","declined"]})
     loan_agreement : string

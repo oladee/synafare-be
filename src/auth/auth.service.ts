@@ -11,6 +11,8 @@ import { IdlookupService } from 'src/utils/idlookup/idlookup.service';
 import {v2 as Cloudinary, UploadApiResponse} from 'cloudinary'
 import * as fs from "fs"
 import { JwtService } from '@nestjs/jwt';
+import { CreateAdminDto } from './dto/auth.dto';
+import {v4 as uuidv4} from "uuid"
 
 @Injectable()
 export class AuthService {
@@ -232,6 +234,25 @@ export class AuthService {
     console.error(error);
     throw new HttpException(error.message || "Failed to fetch user", error.status || 400);
   }
+  }
+
+  async createAdmin(dto : CreateAdminDto){
+    try {
+      const {userDetails} = await this.userService.findOne({email : dto.email})
+      console.log(userDetails)
+      if(userDetails) throw new BadRequestException('Account with this email already eexists on the platform, feel free to use something unique')
+
+      const password = uuidv4().replace(/-/g, '').slice(0, 12);
+
+      const result = await this.firebaseService.createUser(dto.email,password)
+      // console.log(result)
+      const admin_details = await this.userService.findOrCreate({email : dto.email},{email :dto.email,role : "admin", email_confirmed : true, firebaseUid : result.uid})
+
+      return {message : "admin created successfully", result, admin_details,password}
+    } catch (error) {
+      console.log(error)
+      throw new BadRequestException(error.message || "An error occurred while setting up your account, kindly contact dev team")
+    }
   }
   
 
