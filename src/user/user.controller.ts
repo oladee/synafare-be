@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestj
 import { UserService } from './user.service';
 import { Types } from 'mongoose';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { Roles } from 'src/auth/roles.decorator';
 
 @Controller('user')
 export class UserController {
@@ -31,21 +32,25 @@ export class UserController {
     return this.userService.findOne({id});
   }
 
+  
   @Delete(':id')
   deleteOne(@Param('id') id:string) {
     return this.userService.deleteUser(id);
   }
 
+  @Roles('admin')
   @Patch(':id/verify')
   async verifyUser(@Param('id') id: string) {
     return this.userService.verifyUser(id);
   }
 
+  @Roles('admin')
   @Patch(':id/decline')
   async declineUser(@Param('id') id: string) {
     return this.userService.declineUser(id);
   }
 
+  @Roles('admin')
   @Patch(':id')
   async editUser(@Param('id') id: string, @Body() dto: UpdateUserDto) {
     return this.userService.editUser(id, dto);
@@ -56,6 +61,7 @@ export class UserController {
   //   return this.userService.updateAccountConfig(id, dto);
   // }
 
+  @Roles('admin')
   @Patch(':id/block')
   async blockUser(@Param('id') id: string) {
     return this.userService.blockUser(id);
