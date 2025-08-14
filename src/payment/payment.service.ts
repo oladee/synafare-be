@@ -130,6 +130,7 @@ export class PaymentService {
           amount : `${dto.amount}`,
           callbackUrl : "https://synafare-fe.vercel.app/dashboard",
           customerEmail : email,
+          meta_info : {link_for : "test"},
           currency  : "NGN"
         }
       }
