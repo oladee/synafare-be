@@ -141,6 +141,15 @@ export class LoanService {
     }
   }
 
+  async payDownPayment(loanId : string, req : Request){
+    try {
+      // await this.loanModel
+    } catch (error) {
+      console.log(error)
+      throw new BadRequestException(error.message || "An error occurred while processing downpayment")
+    }
+  }
+
   async allLoans({id,type,page,limit}:{id ?:string,type ?:string, page : number, limit : number}){
     try {
       const skip = (page - 1) * limit;

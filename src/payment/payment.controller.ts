@@ -26,11 +26,17 @@ export class PaymentController {
 
   // "checkoutLink": "https://checkout.nomba.com/pay/159d2505-bb38-46b2-8c2c-3407d4265bcb",
   //       "orderReference": "159d2505-bb38-46b2-8c2c-3407d4265bcb"
-  // @UseGuards(FirebaseAuthGuard)
-  // @Get('get-checkout-trx')
-  // getCheckoutTrx(@Body() data : {id:string}) {
-  //   return this.paymentService.getCheckoutTrx(data.id)
-  // }
+  @UseGuards(FirebaseAuthGuard)
+  @Get('get-checkout-trx')
+  getCheckoutTrx(@Body() data : {id:string}) {
+    return this.paymentService.getCheckoutTrx(data.id)
+  }
+
+  @UseGuards(FirebaseAuthGuard)
+  @Post('get-trx-detail')
+  getTrxDetail(@Body() data : {id:string}) {
+    return this.paymentService.getCheckoutTrx(data.id)
+  }
 
   @RequireKeys('first_name', 'last_name', 'bvn')
   @UseGuards(FirebaseAuthGuard)
