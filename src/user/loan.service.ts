@@ -274,16 +274,21 @@ export class LoanService {
       console.log('repay doc',repay_doc)
       const loan_update = await this.loanModel.findOneAndUpdate(
         { _id: loanId },
-        {
-          $inc: { 
-            paid_duration: 1, 
-            outstanding_bal:  -result.amount 
-          },
-          loan_status : 'active'
-        },
-        { new: true },
+        [
+          {
+            $set: {
+              paid_duration: { $add: ["$paid_duration", 1] }, // same as $inc: 1
+              outstanding_bal: {
+                $round: [
+                  { $subtract: ["$outstanding_bal", result.amount] }, // same as $inc: -result.amount
+                  2 // round to 2 decimal places
+                ]
+              }
+            }
+          }
+        ],
+        { new: true }
       );
-
       console.log('loan doc',loan_update)
 
       if (loan_update?.paid_duration === loan_update?.loan_duration_in_months){
