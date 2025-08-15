@@ -16,14 +16,14 @@ import { FirebaseAuthGuard } from 'src/auth/auth.guard';
 import { Roles } from 'src/auth/roles.decorator';
 
 @UseGuards(FirebaseAuthGuard)
-@Controller('notifications')
+@Controller('notification')
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   /**
    * Send loan overdue reminder
    */
-  @Roles('admin')
+  // @Roles('admin')
   @Post('loan-reminder/:userId')
   async sendLoanReminder(
     @Param('userId') userId: Types.ObjectId,

@@ -20,7 +20,7 @@ export class NotificationsService {
     try {
         const user_exist = await this.userService.findOne({id : user})
         if (!Types.ObjectId.isValid(user) || !user_exist){
-            throw new BadRequestException("User account not found")
+          throw new BadRequestException("User account not found")
         }
         
         const notification = new this.notificationModel({

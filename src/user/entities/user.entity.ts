@@ -117,11 +117,12 @@ export class Notification {
   @Prop()
   notification_date : Date
 
-  @Prop()
+  @Prop({type : mongoose.Schema.Types.ObjectId, ref : 'User'})
   user : User
 }
 
 export const BusinessInformationSchema = SchemaFactory.createForClass(Business_Information)
 
+export const NotificationSchema = SchemaFactory.createForClass(Notification);
 
 export const UserSchema = SchemaFactory.createForClass(User);
