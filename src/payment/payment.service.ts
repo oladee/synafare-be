@@ -27,6 +27,7 @@ export class PaymentService {
     const user = req.user
     const uuid = uuidv4()
     try {
+      console.log("dto", dto)
       if(dto.amount > user.wallet_balance){
         throw new BadRequestException("Withdrawal amount exceceds current wallet balance")
       }
