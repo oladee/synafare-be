@@ -8,19 +8,15 @@ import { Request } from 'express';
 @Injectable()
 export class TransactionService {
   constructor(@InjectModel(Transaction.name) private readonly trxModel : Model<Transaction>) {}    
-  async create(dto: CreateTransactionDto,session ?: ClientSession) {
-    try {
-      const options:any = {}
-      if(session){
-        options.session = session
-      }
-      const trx  = await this.trxModel.create(dto,options);
-      return trx;
-    } catch (error) {
-        console.log(error)
-        throw new BadRequestException(error.message || "An error occurred while creating the transaction");
-    }
+ async create(dto: CreateTransactionDto, session?: ClientSession) {
+  try {
+    const [trx] = await this.trxModel.create([dto], { session });
+    return trx;
+  } catch (error) {
+    console.error("Transaction creation failed:", error);
+    throw new BadRequestException(error?.message || "An error occurred while creating the transaction");
   }
+}
 
   async myTransactions({status, page,limit, req}:{status ?: string, page : number, limit : number, req : Request}) {
     try {
