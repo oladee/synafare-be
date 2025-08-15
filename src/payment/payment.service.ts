@@ -33,7 +33,7 @@ export class PaymentService {
 
       const bankInfo = await this.validateBank({bankCode : dto.bank_code, accountNumber : dto.acc_no})
 
-      await this.parentTransfer({amount : dto.amount / 100, accountName : bankInfo.data.accountName, accountNumber : dto.acc_no, bankCode : dto.bank_code,merchantTxRef : uuid,narration : "Synafare web app withdrawal" ,senderName : "Synafare web app", meta : {userId : user.id}})
+      await this.parentTransfer({amount : dto.amount, accountName : bankInfo.data.accountName, accountNumber : dto.acc_no, bankCode : dto.bank_code,merchantTxRef : uuid,narration : "Synafare web app withdrawal" ,senderName : "Synafare web app", meta : {userId : user.id}})
 
     } catch (error) {
       console.log(error)
