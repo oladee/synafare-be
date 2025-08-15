@@ -136,7 +136,7 @@ export class WebhookService {
                     const updatedDetails = await this.userService.findUserAndUpdate({email : order.customerEmail},{$inc : {wallet_balance : order.amount}})
 
                     if(updatedDetails){
-                        await this.trxService.create({ user : updatedDetails.id ,trx_amount : order.amount, trx_type : validTrxType.fund_wallet,ref_id : data.transaction.transactionId,trx_date : data.transaction.time,trx_id : `TRX_${uuid}`,trx_status : validTrxStatus.successful,})
+                        await this.trxService.create({ user : String(updatedDetails.value?._id) ,trx_amount : order.amount, trx_type : validTrxType.fund_wallet,ref_id : data.transaction.transactionId,trx_date : data.transaction.time,trx_id : `TRX_${uuid}`,trx_status : validTrxStatus.successful,})
                     }
                    
                 }

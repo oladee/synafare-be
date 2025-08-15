@@ -14,11 +14,13 @@ export function daysUntilExpiry(expiry: string | Date): number {
 }
 
 export function getDateMonthsFromNow(x: number): Date {
-  const today: Date = new Date();
-  const futureDate: Date = new Date(today);
+  const today = new Date();
+  const futureDate = new Date(today);
 
   futureDate.setMonth(futureDate.getMonth() + x);
+  futureDate.setHours(0, 0, 0, 0); // set to midnight
 
   return futureDate;
 }
+
 

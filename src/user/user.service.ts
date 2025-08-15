@@ -72,7 +72,7 @@ export class UserService {
       options.session = session;
     }
     try {
-      const userDetails = await this.userModel.findOneAndUpdate(searchParam,update,{new : true, options})
+      const userDetails = await this.userModel.findOneAndUpdate(searchParam,update,options)
       return userDetails
     } catch (error) {
       console.log(error)

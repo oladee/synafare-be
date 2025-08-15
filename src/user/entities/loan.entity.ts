@@ -36,16 +36,31 @@ export class Loan{
     @Prop()
     loan_amount : number
 
-    @Prop()
+    @Prop({
+    set: (val: number) => {
+        if (typeof val !== 'number') return val;
+        return Math.round(val * 100) / 100; // 2 decimal places
+    }
+    })
     loan_amount_offered : number
 
     @Prop({default : 0.06})
     interest : number
 
-    @Prop()
+    @Prop({
+    set: (val: number) => {
+        if (typeof val !== 'number') return val;
+        return Math.round(val * 100) / 100; // 2 decimal places
+    }
+    })
     monthly_interest_value : number
 
-    @Prop()
+    @Prop({
+    set: (val: number) => {
+        if (typeof val !== 'number') return val;
+        return Math.round(val * 100) / 100; // 2 decimal places
+    }
+    })
     outstanding_bal : number
 
     @Prop()
@@ -60,13 +75,18 @@ export class Loan{
     @Prop()
     next_payment : Date
 
-    @Prop({enum : ['active', 'completed', 'offer',"pending","rejected","approved","cancelled"], default : "pending"})
+    @Prop({enum : ['active', 'completed','overdue', 'offer',"pending","rejected","approved","cancelled"], default : "pending"})
     loan_status : string
 
     @Prop()
     decline_reason : string
 
-    @Prop()
+    @Prop({
+    set: (val: number) => {
+        if (typeof val !== 'number') return val;
+        return Math.round(val * 100) / 100; // 2 decimal places
+    }
+    })
     monthly_repayment : number
 
     @Prop({default : "not_signed", enum : ["signed","not_signed","declined"]})
@@ -97,3 +117,4 @@ export class RepaymentHistory {
 
 export const RepaymentHistorySchema = SchemaFactory.createForClass(RepaymentHistory)
 export const LoanSchema = SchemaFactory.createForClass(Loan)
+

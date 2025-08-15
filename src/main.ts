@@ -4,7 +4,10 @@ import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser'
 import { FileValidationExceptionFilter } from './utils/file-validation-exception.filter';
 
+
 async function bootstrap() {
+
+
   const app = await NestFactory.create(AppModule);
 
   app.useGlobalPipes(new ValidationPipe({transform : true, transformOptions: {

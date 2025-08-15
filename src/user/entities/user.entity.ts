@@ -99,6 +99,28 @@ export class Business_Information {
   user : User
 }
 
+
+@Schema({timestamps : true})
+export class Notification {
+  @Prop({enum : ['loan_reminder']})
+  notification_type : string
+
+  @Prop()
+  notification_title : string
+
+  @Prop()
+  is_read : boolean
+
+  @Prop()
+  notification_description : string
+
+  @Prop()
+  notification_date : Date
+
+  @Prop()
+  user : User
+}
+
 export const BusinessInformationSchema = SchemaFactory.createForClass(Business_Information)
 
 

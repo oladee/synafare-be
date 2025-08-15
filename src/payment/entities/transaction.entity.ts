@@ -11,10 +11,10 @@ export class Transaction{
     @Prop({ required: true, unique: true })
     trx_id: string;
 
-    @Prop({ required: true, unique: true })
+    @Prop({ unique: true })
     ref_id: string;
 
-    @Prop({ enum : ["fund_wallet","withdrawal","invoice_payment","loan_disbursment","loan_repayment"],required: true })
+    @Prop({ enum : ["fund_wallet","withdrawal","invoice_payment","loan_disbursment","loan_repayment","down_payment"],required: true })
     trx_type: string;
 
     @Prop({ required: true })

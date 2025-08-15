@@ -23,7 +23,7 @@ import { FirebaseAuthGuard } from './auth/auth.guard';
   }),MongooseModule.forRootAsync({
     imports : [ConfigModule],
     useFactory : (config:ConfigService)=>({
-      uri : config.get("MONGO_PROD_URL")
+      uri : config.get("MONGO_PROD_URL"),
     }),
     inject :[ConfigService]
   }),UserModule, FirebaseModule, AuthModule, OtpModule, MailModule,ServeStaticModule.forRoot({

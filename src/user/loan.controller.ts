@@ -78,6 +78,7 @@ export class LoanController {
 
   @Patch(':id/downpayment')
   downpayment(@Param('id') loanId : string, @Req() req : Request){
+    console.log('got here')
     return this.loanService.payDownPayment(loanId,req)
   }
 
@@ -86,7 +87,7 @@ export class LoanController {
     return this.loanService.liquidateLoan(loanId,req)
   }
 
-  @Roles('admin')
+  // @Roles('admin')
   @Get('admin/all-loans')
   getAllLoans( @Query('id') id?: string,@Query('type') type?:"active" | "completed" | "pending",
     @Query('page') page = 1,

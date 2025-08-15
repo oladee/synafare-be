@@ -11,12 +11,13 @@ import { TransactionService } from "src/payment/transaction.service";
 import {v4 as uuidv4} from "uuid"
 import { validTrxStatus, validTrxType } from "src/payment/dto/create-transaction.dto";
 import { getDateMonthsFromNow } from "src/utils/daysTillExpiry";
+import {InjectConnection} from '@nestjs/mongoose';
 
 
 
 @Injectable()
 export class LoanService {
-  constructor(@InjectModel(Loan.name) private loanModel: Model<Loan>,@Inject('CLOUDINARY') private readonly cloudinary: typeof Cloudinary, private readonly userService : UserService, private readonly trxservice : TransactionService,@InjectModel(RepaymentHistory.name) private repayModel : Model<RepaymentHistory>) {}
+  constructor(@InjectModel(Loan.name) private loanModel: Model<Loan>,@Inject('CLOUDINARY') private readonly cloudinary: typeof Cloudinary, private readonly userService : UserService, private readonly trxservice : TransactionService,@InjectModel(RepaymentHistory.name) private repayModel : Model<RepaymentHistory>,@InjectConnection() private readonly connection: mongoose.Connection) {}
 
 
   async getLoans({id,type,page,limit,req}:{id ?:string,type ?:string, page : number, limit : number, req : Request}){
@@ -202,39 +203,50 @@ export class LoanService {
 
   async payDownPayment(loanId : string, req : Request){
     const user = req.user
-    const session = await mongoose.startSession();
+    const session = await this.connection.startSession();
     try {
       session.startTransaction();
-      const loan_exist = await this.loanModel.findOne({_id : loanId, user : user.id, loan_agreement : "signed"})
+      const loan_exist = await this.loanModel.findOne({_id : loanId, user : user.id, loan_agreement : "signed"},null,{session})
+      console.log(loan_exist)
       if(!loan_exist){
+        
         throw new BadRequestException("Loan details not found, kindly check back and ensure agreement has been signed")
       }
 
       if(user.wallet_balance < loan_exist.downpayment_in_naira){
+        
         throw new BadRequestException("Insufficient balance, kindly top up your balance")
       }
 
       await this.userService.findUserAndUpdate({_id : user.id},{$inc : {wallet_balance : -loan_exist.downpayment_in_naira}}, session)
 
-      await this.trxservice.create({trx_amount : loan_exist.downpayment_in_naira,trx_status : validTrxStatus.successful,trx_date : new Date(),trx_id : uuidv4(),user : user.id,trx_type : validTrxType.down_payment},session)
+      await this.trxservice.create({trx_amount : loan_exist.downpayment_in_naira,trx_status : validTrxStatus.successful,trx_date : new Date(),trx_id : `TRX_${uuidv4()}`,ref_id : uuidv4(),user : user.id,trx_type : validTrxType.down_payment},session)
 
-      await this.loanModel.findOneAndUpdate({_id : loanId},{loan_status : "active"},{session})
+      await this.loanModel.findOneAndUpdate({_id : loanId},{loan_status : "active",outstanding_bal : loan_exist.total_repayment},{session})
 
       await this.userService.findUserAndUpdate({_id : user.id},{$inc : {wallet_balance : loan_exist.loan_amount}}, session)
 
-      await this.trxservice.create({trx_amount : loan_exist.loan_amount,trx_status : validTrxStatus.successful,trx_date : new Date(),trx_id : uuidv4(),user : user.id,trx_type : validTrxType.loan_disbursment},session)
+      await this.trxservice.create({trx_amount : loan_exist.loan_amount,trx_status : validTrxStatus.successful,trx_date : new Date(),trx_id : `TRX_${uuidv4()}`,ref_id : uuidv4(),user : user.id,trx_type : validTrxType.loan_disbursment},session)
 
-      await this.repayModel.create(
+      await this.repayModel.insertMany(
         Array.from(
           { length: loan_exist.loan_duration_in_months }, 
-          (_, i) => ({amount : loan_exist.monthly_repayment,is_paid : false, loan : loanId, repayment_date : getDateMonthsFromNow(i +1),user : user.id})
-        ),{session}
-      )
+          (_, i) => ({
+            amount: loan_exist.monthly_repayment,
+            is_paid: false,
+            loan: loanId,
+            repayment_date: getDateMonthsFromNow(i + 1),
+            user: user.id
+          })
+        ),
+        { session }
+      );
 
       await session.commitTransaction();
 
       return {message : "Downpaymemnt processed successfully"}
     } catch (error) {
+      console.log(error)
       await session.abortTransaction();
       console.log(error)
       throw new BadRequestException(error.message || "An error occurred while processing downpayment")
@@ -246,39 +258,72 @@ export class LoanService {
   async liquidateLoan(loanId : string, req : Request){
     const user = req.user
     try {
-      const loan_exist = await this.loanModel.findOne({_id : loanId, user : user.id,loan_status : "active"})
+      const loan_exist = await this.loanModel.findOne({_id : loanId, user : user.id,loan_status : {$in : ['active','overdue']}})
       if(!loan_exist) throw new BadRequestException("Loan does not exist")
 
-      const result = await this.repayModel.aggregate([
-      {
-        $match: {
-          loan: new Types.ObjectId(loanId),
-          is_paid: false
-        }
-      },
-      {
-        $group: {
-          _id: null,
-          totalAmount: { $sum: "$amount" }
-        }
+      const result = await this.getClosestUnpaidRepayment(user.id, loan_exist.id)
+      console.log(result)
+
+      if(!result)return{message : "Looks like you already paid off your loan"}
+
+      if(result.amount  > user.wallet_balance) throw new BadRequestException("Insufficient balance, can not proceed to settle your loan")
+
+      await this.userService.findUserAndUpdate({_id : user.id},{$inc : {wallet_balance : -result.amount}})
+
+      const repay_doc = await this.repayModel.findOneAndUpdate({_id : result._id},{is_paid : true},{new : true})
+      console.log('repay doc',repay_doc)
+      const loan_update = await this.loanModel.findOneAndUpdate(
+        { _id: loanId },
+        {
+          $inc: { 
+            paid_duration: 1, 
+            outstanding_bal:  -result.amount 
+          },
+          loan_status : 'active'
+        },
+        { new: true },
+      );
+
+      console.log('loan doc',loan_update)
+
+      if (loan_update?.paid_duration === loan_update?.loan_duration_in_months){
+        await this.loanModel.findOneAndUpdate({ _id: loanId },{loan_status : "completed"})
       }
-    ]);
 
-    const totalAmount = result.length > 0 ? result[0].totalAmount : 0;
-    if(totalAmount === 0)return{message : "Looks like you already paid off your loan"}
+      return {message : "Loan liquidated successfuly"}
 
-    if(totalAmount  > user.wallet_balance) throw new BadRequestException("Insufficient balance, can not proceed to settle your loan")
-
-    await this.userService.findUserAndUpdate({_id : user.id},{$inc : {wallet_balance : -loan_exist.downpayment_in_naira}})
-
-    await this.repayModel.updateMany({loan : loanId},{is_paid : true})
-    await this.loanModel.findOneAndUpdate({_id : loanId},{paid_duration : loan_exist.loan_duration_in_months})
-
-    return {message : "Loan liquidated successfuly"}
     } catch (error) {
       console.log(error)
       throw new BadRequestException(error.message || "An error occurreed while processing liquidation")
     }
+  }
+
+  async getClosestUnpaidRepayment(userId: string, loanId?: string) {
+    const today = new Date();
+
+    const filter: any = {
+      user: new Types.ObjectId(userId),
+      is_paid: false,
+    };
+
+    if (loanId) {
+      filter.loan = new Types.ObjectId(loanId);
+    }
+
+    const result = await this.repayModel
+      .aggregate([
+        { $match: filter },
+        {
+          $addFields: {
+            dateDiff: { $abs: { $subtract: ['$repayment_date', today] } },
+          },
+        },
+        { $sort: { dateDiff: 1 } },
+        { $limit: 1 },
+      ])
+      .exec();
+
+    return result.length > 0 ? result[0] : null;
   }
 
   async allLoans({id,type,page,limit}:{id ?:string,type ?:string, page : number, limit : number}){
