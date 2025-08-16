@@ -37,7 +37,7 @@ export class LoanService {
       const [loans, total] = await Promise.all([
         this.loanModel.find(query)
         .populate('customer')
-        .populate('user)
+        .populate('user')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -347,7 +347,7 @@ export class LoanService {
       const [loans, total, total_accepted, total_declined] = await Promise.all([
         this.loanModel.find(query)
         .populate('customer')
-        .populate('user)
+        .populate('user')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
