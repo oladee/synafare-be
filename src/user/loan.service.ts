@@ -229,6 +229,8 @@ export class LoanService {
 
       await this.trxservice.create({trx_amount : loan_exist.loan_amount,trx_status : validTrxStatus.successful,trx_date : new Date(),trx_id : `TRX_${uuidv4()}`,ref_id : uuidv4(),user : user.id,trx_type : validTrxType.loan_disbursment},session)
 
+      await this.userService.findUserAndUpdate({_id : user.id},{$inc : {loan_balance : loan_exist.loan_amount}}, session)
+
       await this.repayModel.insertMany(
         Array.from(
           { length: loan_exist.loan_duration_in_months }, 
